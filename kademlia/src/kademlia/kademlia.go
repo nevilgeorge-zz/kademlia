@@ -13,9 +13,10 @@ import (
 )
 
 const (
-	alpha = 3
-	b     = 8 * IDBytes
-	k     = 20
+	alpha   = 3
+	b       = 8 * IDBytes
+	k       = 20
+	kb_size = 160
 )
 
 // Kademlia type. You can put whatever state you need in this.
@@ -23,7 +24,7 @@ type Kademlia struct {
 	NodeID        ID
 	SelfContact   Contact
 	knownContacts []Contact
-	BucketList    [b]KBucket
+	BucketList    []KBucket
 	Table         map[ID][]byte
 }
 
@@ -33,7 +34,9 @@ func NewKademlia(laddr string) *Kademlia {
 	k := new(Kademlia)
 	k.NodeID = NewRandomID()
 	// only 160 nodes in this system
-	k.knownContacts = make([]Contact, 160)
+	// jwhang: NOTE I don't think this is necessary? Or like.. what is it?
+	// k.knownContacts = make([]Contact, kb_size)
+	k.BucketList = make([]KBucket, kb_size)
 
 	// initialize all k-buckets
 	for i := 0; i < b; i++ {
@@ -69,6 +72,13 @@ func NewKademlia(laddr string) *Kademlia {
 
 func (k *Kademlia) FindKBucket(nodeId ID) KBucket {
 	fmt.Println("FindKBucket")
+	distance := k.NodeID.Xor(nodeId)
+	for j := 0; j < -1; j++ {
+		if 2^j <= int(distance) && int(distance) < 2^(j+1) {
+
+		}
+	}
+
 	/*k.NodeID.Xor(nodeId)
 	for i := 0; i < b - 1; i++ {
 		firstBucket := k.BucketList[i]
