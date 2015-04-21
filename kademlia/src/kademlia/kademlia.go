@@ -22,13 +22,19 @@ const (
 type Kademlia struct {
 	NodeID ID
 	SelfContact Contact
-	BucketList [10]KBucket
+	BucketList [b]KBucket
 }
 
 func NewKademlia(laddr string) *Kademlia {
 	// TODO: Initialize other state here as you add functionality.
+	fmt.Println("NewKademlia")
 	k := new(Kademlia)
 	k.NodeID = NewRandomID()
+
+	// initialize all k-buckets
+	for i := 0; i < b; i++ {
+		k.BucketList[i].Initialize()
+	}
 
 	// Set up RPC server
 	// NOTE: KademliaCore is just a wrapper around Kademlia. This type includes
@@ -57,6 +63,24 @@ func NewKademlia(laddr string) *Kademlia {
 	return k
 }
 
+func (k *Kademlia) FindKBucket(nodeId ID) KBucket {
+	fmt.Println("FindKBucket")
+	/*k.NodeID.Xor(nodeId)
+	for i := 0; i < b - 1; i++ {
+		firstBucket := k.BucketList[i]
+		secondBucket := k.BucketList[i+1]
+		if firstBucket.Compare
+	}*/
+	for _,b := range k.BucketList {
+		for _,c := range b.ContactList {
+			if c.NodeID == nodeId {
+				return b
+			}
+		}
+	}
+	return k.BucketList[0]
+}
+
 type NotFoundError struct {
 	id  ID
 	msg string
@@ -69,40 +93,48 @@ func (e *NotFoundError) Error() string {
 func (k *Kademlia) FindContact(nodeId ID) (*Contact, error) {
 	// TODO: Search through contacts, find specified ID
 	// Find contact with provided ID
+	fmt.Println("FindContact")
 	if nodeId == k.NodeID {
 		return &k.SelfContact, nil
 	}
-	return nil, &NotFoundError{nodeId, "Not found"}
+	kb := k.FindKBucket(nodeId)
+	return &kb.ContactList[0], nil
+	//return nil, &NotFoundError{nodeId, "Not found"}
 }
 
 // This is the function to perform the RPC
 func (k *Kademlia) DoPing(host net.IP, port uint16) string {
 	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
+	fmt.Println("DoPing")
 	return "ERR: Not implemented"
 }
 
 func (k *Kademlia) DoStore(contact *Contact, key ID, value []byte) string {
 	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
+	fmt.Println("DoStore")
 	return "ERR: Not implemented"
 }
 
 func (k *Kademlia) DoFindNode(contact *Contact, searchKey ID) string {
 	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
+	fmt.Println("FindFindNode")
 	return "ERR: Not implemented"
 }
 
 func (k *Kademlia) DoFindValue(contact *Contact, searchKey ID) string {
 	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
+	fmt.Println("DoFindValue")
 	return "ERR: Not implemented"
 }
 
 func (k *Kademlia) LocalFindValue(searchKey ID) string {
 	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
+	fmt.Println("LocalFindValue")
 	return "ERR: Not implemented"
 }
 
@@ -118,3 +150,5 @@ func (k *Kademlia) DoIterativeFindValue(key ID) string {
 	// For project 2!
 	return "ERR: Not implemented"
 }
+
+

@@ -1,7 +1,7 @@
 package kademlia
  
 import (
-	//"fmt"
+	"fmt"
 	//"log"
 	//"net"
 	//"net/http"
@@ -10,13 +10,17 @@ import (
 )
 
 type KBucket struct {
+	NodeId ID
 	NumContacts int
-	ContactList [20]Contact
+	ContactList [k]Contact
 	Kad *Kademlia
-	BitMap [20]bool
+	BitMap [k]bool
 }
 
 func (kb *KBucket) Initialize() {
+	fmt.Println("Initialize")
+	kb.NumContacts = 0
+	kb.NodeId = NewRandomID()
 	for i := 0; i < 20; i++ {
 		nullContact := new(Contact)
 		kb.ContactList[i] = *nullContact
@@ -25,6 +29,7 @@ func (kb *KBucket) Initialize() {
 }
 
 func (kb *KBucket) RemoveContact(targetID ID) (bool) {
+	fmt.Println("RemoveContact")
 	for i,_ := range kb.ContactList {
 		if kb.ContactList[i].NodeID == targetID && kb.BitMap[i] == true  {
 			nullContact := new(Contact)
@@ -37,6 +42,7 @@ func (kb *KBucket) RemoveContact(targetID ID) (bool) {
 }
 
 func (kb *KBucket) AddContact(newContact Contact) {
+	fmt.Println("AddContact")
 	for i,_ := range kb.ContactList {
 		if kb.BitMap[i] == false {
 			kb.ContactList[i] = newContact
