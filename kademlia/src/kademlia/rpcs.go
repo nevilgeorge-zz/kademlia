@@ -33,11 +33,19 @@ type PongMessage struct {
 }
 
 func (kc *KademliaCore) Ping(ping PingMessage, pong *PongMessage) error {
-	// TODO: Finish implementation
 	pong.MsgID = CopyID(ping.MsgID)
-    // Specify the sender
+
+	// Specify the sender
 	// Update contact, etc
-	return nil
+	// sender is this node
+	c := kc.kademlia.SelfContact
+	pong.Sender = c
+	kc.kademlia.knownContacts = append(kc.kademlia.knownContacts, ping.Sender)
+	for i := 0; i < len(kc.kademlia.BucketList); i += 1 { // jwhang: TODO make this multithreaded?
+		kc.kademlia.BucketList[i].Update(ping.Sender)
+	}
+
+	return nil // not sure what to do with error
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -57,6 +65,10 @@ type StoreResult struct {
 
 func (kc *KademliaCore) Store(req StoreRequest, res *StoreResult) error {
 	// TODO: Implement.
+	kb := kc.kademlia.UpdateContact(req.Sender) // haven't been implemented yet
+	kc.kademlia.Table[req.Key] = req.Value
+	res.MsgID = req.MsgID
+	res.Err = nil
 	return nil
 }
 

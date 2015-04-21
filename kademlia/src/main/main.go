@@ -108,7 +108,7 @@ func executeLine(k *kademlia.Kademlia, line string) (response string) {
 		// Check if toks[1] is a valid NodeID, if not, try pinging host:port
 		// print an error if neither is valid
 		//
-		// Following lines need to be expanded
+		// Following lines need to be expanded'
 
 		if len(toks) < 2 || len(toks) > 2 {
 			response = "usage: ping [nodeID | host:port]"
