@@ -20,10 +20,10 @@ const (
 
 // Kademlia type. You can put whatever state you need in this.
 type Kademlia struct {
-	NodeID ID
-    SelfContact Contact
-    knownContacts []Contact
-	BucketList [b]KBucket
+	NodeID        ID
+	SelfContact   Contact
+	knownContacts []Contact
+	BucketList    [b]KBucket
 }
 
 func NewKademlia(laddr string) *Kademlia {
@@ -74,8 +74,8 @@ func (k *Kademlia) FindKBucket(nodeId ID) KBucket {
 		secondBucket := k.BucketList[i+1]
 		if firstBucket.Compare
 	}*/
-	for _,b := range k.BucketList {
-		for _,c := range b.ContactList {
+	for _, b := range k.BucketList {
+		for _, c := range b.ContactList {
 			if c.NodeID == nodeId {
 				return b
 			}
@@ -153,5 +153,3 @@ func (k *Kademlia) DoIterativeFindValue(key ID) string {
 	// For project 2!
 	return "ERR: Not implemented"
 }
-
-

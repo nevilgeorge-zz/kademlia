@@ -33,16 +33,19 @@ type PongMessage struct {
 }
 
 func (kc *KademliaCore) Ping(ping PingMessage, pong *PongMessage) error {
-	// TODO: Finish implementation
 	pong.MsgID = CopyID(ping.MsgID)
-    // Specify the sender
+
+	// Specify the sender
 	// Update contact, etc
 	// sender is this node
 	c := kc.kademlia.SelfContact
 	pong.Sender = c
 	kc.kademlia.knownContacts = append(kc.kademlia.knownContacts, ping.Sender)
-	
-	return nil
+	for i := 0; i < len(kc.kademlia.BucketList); i += 1 { // jwhang: TODO make this multithreaded?
+		kc.kademlia.BucketList[i].Update(ping.Sender)
+	}
+
+	return nil // not sure what to do with error
 }
 
 ///////////////////////////////////////////////////////////////////////////////
