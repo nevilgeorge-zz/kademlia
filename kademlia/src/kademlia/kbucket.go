@@ -76,7 +76,9 @@ func (kb *KBucket) Update(updated Contact) {
 		temp.Port = updated.Port
 		kb.AddContact(temp)
 	} else {
-
+		// ping first node in slice 
+		// if it doesn't respond, removeContact(oldContact) and addContact(updated)
+		// else moveToTail(oldContact) and ignore updated
 	}
 }
 
