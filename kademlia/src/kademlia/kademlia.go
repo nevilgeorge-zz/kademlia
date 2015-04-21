@@ -23,7 +23,6 @@ type Kademlia struct {
 	NodeID ID
     SelfContact Contact
     knownContacts []Contact
-	SelfContact Contact
 	BucketList [b]KBucket
 }
 

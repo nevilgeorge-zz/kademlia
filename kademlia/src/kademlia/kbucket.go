@@ -9,6 +9,7 @@ import (
 	//"strconv"
 )
 
+// KBucket struct
 type KBucket struct {
 	NodeId ID
 	NumContacts int
@@ -17,6 +18,7 @@ type KBucket struct {
 	BitMap [k]bool
 }
 
+// Initialize KBuckets, called 160 times when Kademlia is instantiated in kademlia.org
 func (kb *KBucket) Initialize() {
 	fmt.Println("Initialize")
 	kb.NumContacts = 0
@@ -28,6 +30,7 @@ func (kb *KBucket) Initialize() {
 	}
 }
 
+// Remove the contact corresponding to a given ID from the KBucket
 func (kb *KBucket) RemoveContact(targetID ID) (bool) {
 	fmt.Println("RemoveContact")
 	for i,_ := range kb.ContactList {
@@ -41,6 +44,7 @@ func (kb *KBucket) RemoveContact(targetID ID) (bool) {
 	return false
 }
 
+// Adds a given contact to a free space in the KBucket
 func (kb *KBucket) AddContact(newContact Contact) {
 	fmt.Println("AddContact")
 	for i,_ := range kb.ContactList {
@@ -51,3 +55,4 @@ func (kb *KBucket) AddContact(newContact Contact) {
 		}
 	}
 }
+
