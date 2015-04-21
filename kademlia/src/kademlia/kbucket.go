@@ -53,21 +53,23 @@ func (kb *KBucket) ContainsContact(cont Contact) (exists bool, index int) {
 		if current.NodeID.Equals(cont.NodeID) {
 			exists = true
 			index = i
-			return exists
+			return exists, i
 		}
 	}
-	exists = false
-	index = -1
-	return exists
+	if !exists {
+		exists = false
+		index = -1
+	}
+	return exists, index
 }
 
 // Update the KBucket to sort the nodes with most recently used in at the head of the KBucket
 func (kb *KBucket) Update(updated Contact) {
 	// check whether the updated contact exists in the KBucket
-	exists, _ := ContainsContact(updated)
+	exists, _ := kb.ContainsContact(updated)
 	if exists {
 		// move Contact to the end of the KBucket
-		kb.moveToTail(updated)
+		kb.MoveToTail(updated)
 	} else if len(kb.ContactList) < k {
 		// create a new contact for the node and add it to the tail of the KBucket
 		// not sure if a new Contact needs to be created, but that's what the doc says
@@ -83,8 +85,8 @@ func (kb *KBucket) Update(updated Contact) {
 		// else moveToTail(oldContact) and ignore updated
 		firstContact := kb.ContactList[0]
 		ret := kb.Kad.DoPing(firstContact.Host, firstContact.Port)
-		if ret == null {
-			kb.RemoveContact(firstContact)
+		if ret == "Error" { // jwhang TODO: Fix this to nil
+			kb.RemoveContact(firstContact.NodeID)
 			kb.AddContact(updated)
 		} else {
 			kb.MoveToTail(firstContact)
@@ -94,10 +96,10 @@ func (kb *KBucket) Update(updated Contact) {
 
 // moves a contact from its position in the KBucket to the end of the same KBucket
 func (kb *KBucket) MoveToTail(updated Contact) {
-	exists, _ := ContainsContact(updated)
+	exists, _ := kb.ContainsContact(updated)
 	if exists {
 		// finds and removes contact if already exists
-		kb.RemoveContact(updated)
+		kb.RemoveContact(updated.NodeID)
 	}
 	// adds to the end of the KBucket
 	kb.AddContact(updated)
