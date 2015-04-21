@@ -22,6 +22,7 @@ const (
 type Kademlia struct {
 	NodeID ID
     SelfContact Contact
+    knownContacts []Contact
 }
 
 
@@ -29,6 +30,8 @@ func NewKademlia(laddr string) *Kademlia {
 	// TODO: Initialize other state here as you add functionality.
 	k := new(Kademlia)
 	k.NodeID = NewRandomID()
+	// only 160 nodes in this system
+	k.knownContacts = make([]Contact, 160)
 
 	// Set up RPC server
 	// NOTE: KademliaCore is just a wrapper around Kademlia. This type includes

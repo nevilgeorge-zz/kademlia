@@ -37,6 +37,11 @@ func (kc *KademliaCore) Ping(ping PingMessage, pong *PongMessage) error {
 	pong.MsgID = CopyID(ping.MsgID)
     // Specify the sender
 	// Update contact, etc
+	// sender is this node
+	c := kc.kademlia.SelfContact
+	pong.Sender = c
+	kc.kademlia.knownContacts = append(kc.kademlia.knownContacts, ping.Sender)
+	
 	return nil
 }
 
