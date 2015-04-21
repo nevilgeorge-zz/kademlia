@@ -24,6 +24,7 @@ type Kademlia struct {
 	SelfContact   Contact
 	knownContacts []Contact
 	BucketList    [b]KBucket
+	Table         map[ID][]byte
 }
 
 func NewKademlia(laddr string) *Kademlia {
