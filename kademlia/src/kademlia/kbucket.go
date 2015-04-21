@@ -1,5 +1,5 @@
 package kademlia
- 
+
 import (
 	"fmt"
 	//"log"
@@ -11,9 +11,9 @@ import (
 
 // KBucket struct
 type KBucket struct {
-	NodeID ID
+	NodeID      ID
 	ContactList []Contact
-	Kad *Kademlia
+	Kad         *Kademlia
 }
 
 // Initialize KBuckets, called 160 times when Kademlia is instantiated in kademlia.go
@@ -25,12 +25,12 @@ func (kb *KBucket) Initialize() {
 }
 
 // Remove the contact corresponding to a given ID from the KBucket
-func (kb *KBucket) RemoveContact(targetID ID) (bool) {
+func (kb *KBucket) RemoveContact(targetID ID) bool {
 	fmt.Println("RemoveContact")
-	for i,_ := range kb.ContactList {
+	for i, _ := range kb.ContactList {
 		if kb.ContactList[i].NodeID == targetID {
 			temp := kb.ContactList
-			a := append(temp[:i], temp[(i + 1):]...)
+			a := append(temp[:i], temp[(i+1):]...)
 			kb.ContactList = a
 			return true
 		}
@@ -70,13 +70,14 @@ func (kb *KBucket) Update(updated Contact) {
 	} else if len(kb.ContactList) < k {
 		// create a new contact for the node and add it to the tail of the KBucket
 		// not sure if a new Contact needs to be created, but that's what the doc says
-		temp := Contact()
+		//temp := Contact(CopyID(updated.NodeID), updated.Host, updated.Port)
+		temp := new(Contact)
 		temp.NodeID = CopyID(updated.NodeID)
 		temp.Host = updated.Host
 		temp.Port = updated.Port
-		kb.AddContact(temp)
+		kb.AddContact(*temp)
 	} else {
-		// ping first node in slice 
+		// ping first node in slice
 		// if it doesn't respond, removeContact(oldContact) and addContact(updated)
 		// else moveToTail(oldContact) and ignore updated
 	}
