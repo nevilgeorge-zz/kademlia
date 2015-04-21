@@ -61,26 +61,29 @@ func (kb *KBucket) ContainsContact(cont Contact) (exists bool, index int) {
 }
 
 // Update the KBucket to sort the nodes with most recently used in at the head of the KBucket
-// func (kb *KBucket) Update(updated Contact) {
-// 	// check whether the updated contact exists in the KBucket
-// 	exists, index := ContainsContact(updated)
-// 	if exists {
-// 		// move Contact to the end of the KBucket
-// 		kb.moveToTail(updated, index)
-// 	} else if len(kb.ContactList) < k {
-// 		// create a new contact for the node and add it to the tail of the KBucket
-// 		// not sure if a new Contact needs to be created, but that's what the doc says
-// 		temp := Contact()
-// 		temp.NodeID = CopyID(updated.NodeID)
-// 		temp.Host = updated.Host
-// 		temp.Port = updated.Port
-// 		kb.appendToTail(temp)
-// 	} else {
+func (kb *KBucket) Update(updated Contact) {
+	// check whether the updated contact exists in the KBucket
+	exists, _ := ContainsContact(updated)
+	if exists {
+		// move Contact to the end of the KBucket
+		kb.moveToTail(updated)
+	} else if len(kb.ContactList) < k {
+		// create a new contact for the node and add it to the tail of the KBucket
+		// not sure if a new Contact needs to be created, but that's what the doc says
+		temp := Contact()
+		temp.NodeID = CopyID(updated.NodeID)
+		temp.Host = updated.Host
+		temp.Port = updated.Port
+		kb.AddContact(temp)
+	} else {
 
-// 	}
-// }
+	}
+}
 
 // moves a contact from its position in the KBucket to the end of the same KBucket
-// func (kb *KBucket) moveToTail(updated Contact, index int) {
-
-// }
+func (kb *KBucket) moveToTail(updated Contact) {
+	// finds and removes contact
+	kb.RemoveContact(updated)
+	// adds to the end of the KBucket
+	kb.AddContact(updated)
+}
