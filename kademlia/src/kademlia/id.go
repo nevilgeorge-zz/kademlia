@@ -50,6 +50,11 @@ func (id ID) Less(other ID) bool {
 	return id.Compare(other) < 0
 }
 
+// implemented by nsg622
+func (id ID) LessThanOrEquals(other ID) bool {
+	return id.Compare(other) <= 0
+}
+
 // Return the number of consecutive zeroes, starting from the low-order bit, in
 // a ID.
 func (id ID) PrefixLen() int {
