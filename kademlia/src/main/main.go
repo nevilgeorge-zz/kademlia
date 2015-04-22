@@ -37,6 +37,11 @@ func main() {
 	fmt.Printf("kademlia starting up!\n")
 	kadem := kademlia.NewKademlia(listenStr)
 
+	// nsg622: testing DoPing
+	// var p uint16
+	// p = 7777
+	// kadem.DoPing([]byte("localhost"), p)
+
 	// Confirm our server is up with a PING request and then exit.
 	// Your code should loop forever, reading instructions from stdin and
 	// printing their results to stdout. See README.txt for more details.

@@ -118,6 +118,24 @@ func (k *Kademlia) DoPing(host net.IP, port uint16) string {
 	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
 	fmt.Println("DoPing")
+	address := string(host) + ":" + strconv.Itoa(int(port))
+	client, err := rpc.DialHTTP("tcp", address)
+	if err != nil {
+		log.Fatal("DialHTTP in DoPing: ", err)
+	}
+
+	// create new ping to send to the other node
+	ping := new(PingMessage)
+	ping.MsgID = NewRandomID()
+	var pong PongMessage
+	err = client.Call("KademliaCore.Ping", ping, &pong)
+	if err != nil {
+		log.Fatal("Call in DoPing", err)
+	}
+
+	// nsg622 TODO:
+	// update contact in kbucket of this kademlia
+
 	return "ERR: Not implemented"
 }
 
