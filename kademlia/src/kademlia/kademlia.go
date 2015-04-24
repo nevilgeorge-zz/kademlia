@@ -23,7 +23,6 @@ const (
 type Kademlia struct {
 	NodeID        ID
 	SelfContact   Contact
-	knownContacts []Contact
 	BucketList    []KBucket
 	Table         map[ID][]byte
 }
@@ -34,8 +33,6 @@ func NewKademlia(laddr string) *Kademlia {
 	k := new(Kademlia)
 	k.NodeID = NewRandomID()
 	// only 160 nodes in this system
-	// jwhang: NOTE I don't think this is necessary? Or like.. what is it?
-	// k.knownContacts = make([]Contact, kb_size)
 	k.BucketList = make([]KBucket, kb_size)
 
 	// initialize all k-buckets
@@ -72,12 +69,12 @@ func NewKademlia(laddr string) *Kademlia {
 
 func (k *Kademlia) FindKBucket(nodeId ID) KBucket {
 	fmt.Println("FindKBucket")
-	distance := k.NodeID.Xor(nodeId)
-	for j := 0; j < -1; j++ {
-		if 2^j <= int(distance) && int(distance) < 2^(j+1) {
+	// distance := k.NodeID.Xor(nodeId)
+	// for j := 0; j < -1; j++ {
+	// 	if 2^j <= int(distance) && int(distance) < 2^(j+1) {
 
-		}
-	}
+	// 	}
+	// }
 
 	/*k.NodeID.Xor(nodeId)
 	for i := 0; i < b - 1; i++ {
@@ -121,6 +118,24 @@ func (k *Kademlia) DoPing(host net.IP, port uint16) string {
 	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
 	fmt.Println("DoPing")
+	address := string(host) + ":" + strconv.Itoa(int(port))
+	client, err := rpc.DialHTTP("tcp", address)
+	if err != nil {
+		log.Fatal("DialHTTP in DoPing: ", err)
+	}
+
+	// create new ping to send to the other node
+	ping := new(PingMessage)
+	ping.MsgID = NewRandomID()
+	var pong PongMessage
+	err = client.Call("KademliaCore.Ping", ping, &pong)
+	if err != nil {
+		log.Fatal("Call in DoPing", err)
+	}
+
+	// nsg622 TODO:
+	// update contact in kbucket of this kademlia
+
 	return "ERR: Not implemented"
 }
 
