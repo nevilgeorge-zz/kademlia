@@ -135,6 +135,9 @@ func (k *Kademlia) DoPing(host net.IP, port uint16) string {
 
 	// nsg622 TODO:
 	// update contact in kbucket of this kademlia
+	updated := pong.Sender
+	// find kbucket that should hold this contact
+	
 
 	return "ERR: Not implemented"
 }
@@ -178,4 +181,11 @@ func (k *Kademlia) DoIterativeStore(key ID, value []byte) string {
 func (k *Kademlia) DoIterativeFindValue(key ID) string {
 	// For project 2!
 	return "ERR: Not implemented"
+}
+
+// nsg622: calculate distance from this node to another node
+func (k *Kademlia) DistanceFromNode(other Contact) string {
+	newID := IDFromString(k.NodeID.AsString())
+	newID.Xor(other.NodeID)
+	return newID.AsString()
 }
