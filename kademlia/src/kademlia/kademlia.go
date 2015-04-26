@@ -69,27 +69,9 @@ func NewKademlia(laddr string) *Kademlia {
 
 func (k *Kademlia) FindKBucket(nodeId ID) KBucket {
 	fmt.Println("FindKBucket")
-	// distance := k.NodeID.Xor(nodeId)
-	// for j := 0; j < -1; j++ {
-	// 	if 2^j <= int(distance) && int(distance) < 2^(j+1) {
-
-	// 	}
-	// }
-
-	/*k.NodeID.Xor(nodeId)
-	for i := 0; i < b - 1; i++ {
-		firstBucket := k.BucketList[i]
-		secondBucket := k.BucketList[i+1]
-		if firstBucket.Compare
-	}*/
-	for _, b := range k.BucketList {
-		for _, c := range b.ContactList {
-			if c.NodeID == nodeId {
-				return b
-			}
-		}
-	}
-	return k.BucketList[0]
+	distance := k.NodeID.Xor(nodeId)
+	index := distance.PrefixLen()
+	return k.BucketList[index]
 }
 
 type NotFoundError struct {
@@ -121,7 +103,7 @@ func (k *Kademlia) DoPing(host net.IP, port uint16) string {
 	address := string(host) + ":" + strconv.Itoa(int(port))
 	client, err := rpc.DialHTTP("tcp", address)
 	if err != nil {
-		log.Fatal("DialHTTP in DoPing: ", err)
+		log.Fatal("ERR: ", err)
 	}
 
 	// create new ping to send to the other node
@@ -130,37 +112,96 @@ func (k *Kademlia) DoPing(host net.IP, port uint16) string {
 	var pong PongMessage
 	err = client.Call("KademliaCore.Ping", ping, &pong)
 	if err != nil {
-		log.Fatal("Call in DoPing", err)
+		log.Fatal("ERR: ", err)
 	}
 
-	// nsg622 TODO:
 	// update contact in kbucket of this kademlia
 	updated := pong.Sender
-	// find kbucket that should hold this contact
-	
+	k.UpdateContactInKBucket(&updated)
 
-	return "ERR: Not implemented"
+	return "OK: Contact updated in KBucket"
 }
 
 func (k *Kademlia) DoStore(contact *Contact, key ID, value []byte) string {
 	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
 	fmt.Println("DoStore")
-	return "ERR: Not implemented"
+	address := string(contact.Host) + ":" + strconv.Itoa(int(contact.Port))
+	client, err := rpc.DialHTTP("tcp", address)
+	if err != nil {
+		log.Fatal("ERR: ", err)
+	}
+
+	request := new(StoreRequest)
+	request.Sender = *contact
+	request.Key = key
+	request.Value = value
+	request.MsgID = NewRandomID()
+
+	var result StoreResult
+	err = client.Call("KademliaCore.Store", request, &result)
+	if err != nil {
+		log.Fatal("ERR: ", err)
+	}
+
+	// update contact in kbucket of this kademlia
+	k.UpdateContactInKBucket(contact)
+
+	return "OK: Contact updated in KBucket"
 }
 
 func (k *Kademlia) DoFindNode(contact *Contact, searchKey ID) string {
 	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
 	fmt.Println("FindFindNode")
-	return "ERR: Not implemented"
+	address := string(contact.Host) + ":" + strconv.Itoa(int(contact.Port))
+	client, err := rpc.DialHTTP("tcp", address)
+	if err != nil {
+		log.Fatal("ERR: ", err)
+	}
+
+	request := new(FindNodeRequest)
+	request.Sender = *contact
+	request.NodeID = searchKey
+	request.MsgID = NewRandomID()
+
+	var result FindNodeResult
+	err = client.Call("KademliaCore.FindNode", request, &result)
+	if err != nil {
+		log.Fatal("ERR: ", err)
+	}
+
+	// update contact in kbucket of this kademlia
+	k.UpdateContactInKBucket(contact)
+
+	return "OK: Contact updated in KBucket"
 }
 
 func (k *Kademlia) DoFindValue(contact *Contact, searchKey ID) string {
 	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
 	fmt.Println("DoFindValue")
-	return "ERR: Not implemented"
+	address := string(contact.Host) + ":" + strconv.Itoa(int(contact.Port))
+	client, err := rpc.DialHTTP("tcp", address)
+	if err != nil {
+		log.Fatal("ERR: ", err)
+	}
+
+	request := new(FindValueRequest)
+	request.Sender = *contact
+	request.Key = searchKey
+	request.MsgID = NewRandomID()
+
+	var result FindValueResult
+	err = client.Call("KademliaCore.FindValue", request, &result)
+	if err != nil {
+		log.Fatal("ERR: ", err)
+	}
+
+	// update contact in kbucket of this kademlia
+	k.UpdateContactInKBucket(contact)
+
+	return "OK: Contact updated in KBucket"	
 }
 
 func (k *Kademlia) LocalFindValue(searchKey ID) string {
@@ -183,9 +224,7 @@ func (k *Kademlia) DoIterativeFindValue(key ID) string {
 	return "ERR: Not implemented"
 }
 
-// nsg622: calculate distance from this node to another node
-func (k *Kademlia) DistanceFromNode(other Contact) string {
-	newID := IDFromString(k.NodeID.AsString())
-	newID.Xor(other.NodeID)
-	return newID.AsString()
+func (k *Kademlia) UpdateContactInKBucket(update *Contact) {
+	bucket := k.FindKBucket(update.NodeID)
+	bucket.Update(*update)
 }
