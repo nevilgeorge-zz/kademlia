@@ -69,27 +69,9 @@ func NewKademlia(laddr string) *Kademlia {
 
 func (k *Kademlia) FindKBucket(nodeId ID) KBucket {
 	fmt.Println("FindKBucket")
-	// distance := k.NodeID.Xor(nodeId)
-	// for j := 0; j < -1; j++ {
-	// 	if 2^j <= int(distance) && int(distance) < 2^(j+1) {
-
-	// 	}
-	// }
-
-	/*k.NodeID.Xor(nodeId)
-	for i := 0; i < b - 1; i++ {
-		firstBucket := k.BucketList[i]
-		secondBucket := k.BucketList[i+1]
-		if firstBucket.Compare
-	}*/
-	for _, b := range k.BucketList {
-		for _, c := range b.ContactList {
-			if c.NodeID == nodeId {
-				return b
-			}
-		}
-	}
-	return k.BucketList[0]
+	distance := k.NodeID.Xor(nodeId)
+	index := distance.PrefixLen()
+	return k.BucketList[index]
 }
 
 type NotFoundError struct {
@@ -133,8 +115,8 @@ func (k *Kademlia) DoPing(host net.IP, port uint16) string {
 		log.Fatal("Call in DoPing ", err)
 	}
 
-	// nsg622 TODO:
 	// update contact in kbucket of this kademlia
+	k.UpdateContactInKBucket(&pong.Sender)
 
 	return "ERR: Not implemented"
 }
@@ -161,8 +143,8 @@ func (k *Kademlia) DoStore(contact *Contact, key ID, value []byte) string {
 		log.Fatal("Call in DoStore ", err)
 	}
 
-	// nsg622 TODO:
 	// update contact in kbucket of this kademlia
+	k.UpdateContactInKBucket(contact)
 
 	return "ERR: Not implemented"
 }
@@ -188,8 +170,8 @@ func (k *Kademlia) DoFindNode(contact *Contact, searchKey ID) string {
 		log.Fatal("Call in DoStore ", err)
 	}
 
-	// nsg622 TODO:
 	// update contact in kbucket of this kademlia
+	k.UpdateContactInKBucket(contact)
 
 	return "ERR: Not implemented"
 }
@@ -219,4 +201,9 @@ func (k *Kademlia) DoIterativeStore(key ID, value []byte) string {
 func (k *Kademlia) DoIterativeFindValue(key ID) string {
 	// For project 2!
 	return "ERR: Not implemented"
+}
+
+func (k *Kademlia) UpdateContactInKBucket(update *Contact) {
+	bucket := k.FindKBucket(update.NodeID)
+	bucket.Update(*update)
 }
