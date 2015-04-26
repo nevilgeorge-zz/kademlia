@@ -233,36 +233,42 @@ func (k *Kademlia) UpdateContactInKBucket(update *Contact) {
 // jwhang: updates each contact
 func (k *Kademlia) UpdateContacts(contact Contact) {
 	prefixLen := k.NodeID.Xor(contact.NodeID).PrefixLen()
-	currentBucket := k.BucketList[pre]
+	currentBucket := k.BucketList[prefixLen]
 	currentBucket.Update(contact)
 }
 
 // jwhang: FindCloseNodes: to be used in FindNode
-func (k *Kademlia) FindCloseContacts(k ID, req ID) []Contact {
-	prefixLen := k.NodeID.Xor(contact.NodeID).PrefixLen()
-	contacts := make([]Contact, 0, k)
+func (k *Kademlia) FindCloseContacts(key ID, req ID) []Contact {
+	prefixLen := k.NodeID.Xor(key).PrefixLen()
+	contacts := make([]Contact, 0, 160)
 
-	if bucket_count > pre {
-		AddBucketToSlice(k, requester, pre, &nodes)
+	if bucket_count > prefixLen {
+		k.AddBucketToSlice(req, prefixLen, &contacts)
 	} else {
 	}
-
+	return contacts
 }
 
 func (k *Kademlia) AddBucketToSlice(requester ID, bucketNum int, source *[]Contact) {
-	k.contacts_mutex[bucketNum].Lock()
+	//k.contacts_mutex[bucketNum].Lock() // jwhang: TODO add mutex for multithread
 	k.AddBucketContentsToSlice(k.BucketList[bucketNum], requester, source)
-	k.contacts_mutex[bucketNum].Unlock()
+	//k.contacts_mutex[bucketNum].Unlock()
 }
 
-func (k *Kademlia) AddBucketContentsToSlice(blist []KBucket, requester int, source *[]Contact) {
+func (k *Kademlia) AddBucketContentsToSlice(blist KBucket, requester ID, source *[]Contact) {
 	count := 0
-	emptySpace := cap(source) - len(source)
-	for b := blist[0]; b != nil && count < emptySpace; b++ {
-		if false == con.Value.(Contact).NodeID.Equals(requester) {
-			*s = append(*s, con.Value.(Contact))
+	i := 0
+	emptySpace := cap(*source) - len(*source)
+	for count < emptySpace {
+		b := blist.ContactList[i]
+		if b == nil {
+			break
+		}
+		if b.Value.(Contact).NodeID.Equals(requester) {
+			*source = append(*source, b.Value.(Contact))
 			count += 1
 		}
+		i += 1
 	}
 	return
 }
