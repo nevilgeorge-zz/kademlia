@@ -103,7 +103,7 @@ func (k *Kademlia) DoPing(host net.IP, port uint16) string {
 	address := string(host) + ":" + strconv.Itoa(int(port))
 	client, err := rpc.DialHTTP("tcp", address)
 	if err != nil {
-		log.Fatal("DialHTTP in DoPing: ", err)
+		log.Fatal("ERR: ", err)
 	}
 
 	// create new ping to send to the other node
@@ -112,13 +112,13 @@ func (k *Kademlia) DoPing(host net.IP, port uint16) string {
 	var pong PongMessage
 	err = client.Call("KademliaCore.Ping", ping, &pong)
 	if err != nil {
-		log.Fatal("Call in DoPing ", err)
+		log.Fatal("ERR: ", err)
 	}
 
 	// update contact in kbucket of this kademlia
 	k.UpdateContactInKBucket(&pong.Sender)
 
-	return "ERR: Not implemented"
+	return "OK: Contact updated in KBucket"
 }
 
 func (k *Kademlia) DoStore(contact *Contact, key ID, value []byte) string {
@@ -128,7 +128,7 @@ func (k *Kademlia) DoStore(contact *Contact, key ID, value []byte) string {
 	address := string(contact.Host) + ":" + strconv.Itoa(int(contact.Port))
 	client, err := rpc.DialHTTP("tcp", address)
 	if err != nil {
-		log.Fatal("DialHTTP in DoStore: ", err)
+		log.Fatal("ERR: ", err)
 	}
 
 	request := new(StoreRequest)
@@ -140,13 +140,13 @@ func (k *Kademlia) DoStore(contact *Contact, key ID, value []byte) string {
 	var result StoreResult
 	err = client.Call("KademliaCore.Store", request, &result)
 	if err != nil {
-		log.Fatal("Call in DoStore ", err)
+		log.Fatal("ERR: ", err)
 	}
 
 	// update contact in kbucket of this kademlia
 	k.UpdateContactInKBucket(contact)
 
-	return "ERR: Not implemented"
+	return "OK: Contact updated in KBucket"
 }
 
 func (k *Kademlia) DoFindNode(contact *Contact, searchKey ID) string {
@@ -156,7 +156,7 @@ func (k *Kademlia) DoFindNode(contact *Contact, searchKey ID) string {
 	address := string(contact.Host) + ":" + strconv.Itoa(int(contact.Port))
 	client, err := rpc.DialHTTP("tcp", address)
 	if err != nil {
-		log.Fatal("DialHTTP in DoStore: ", err)
+		log.Fatal("ERR: ", err)
 	}
 
 	request := new(FindNodeRequest)
@@ -167,20 +167,40 @@ func (k *Kademlia) DoFindNode(contact *Contact, searchKey ID) string {
 	var result FindNodeResult
 	err = client.Call("KademliaCore.FindNode", request, &result)
 	if err != nil {
-		log.Fatal("Call in DoStore ", err)
+		log.Fatal("ERR: ", err)
 	}
 
 	// update contact in kbucket of this kademlia
 	k.UpdateContactInKBucket(contact)
 
-	return "ERR: Not implemented"
+	return "OK: Contact updated in KBucket"
 }
 
 func (k *Kademlia) DoFindValue(contact *Contact, searchKey ID) string {
 	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
 	fmt.Println("DoFindValue")
-	return "ERR: Not implemented"
+	address := string(contact.Host) + ":" + strconv.Itoa(int(contact.Port))
+	client, err := rpc.DialHTTP("tcp", address)
+	if err != nil {
+		log.Fatal("ERR: ", err)
+	}
+
+	request := new(FindValueRequest)
+	request.Sender = *contact
+	request.Key = searchKey
+	request.MsgID = NewRandomID()
+
+	var result FindValueResult
+	err = client.Call("KademliaCore.FindValue", request, &result)
+	if err != nil {
+		log.Fatal("ERR: ", err)
+	}
+
+	// update contact in kbucket of this kademlia
+	k.UpdateContactInKBucket(contact)
+
+	return "OK: Contact updated in KBucket"	
 }
 
 func (k *Kademlia) LocalFindValue(searchKey ID) string {
