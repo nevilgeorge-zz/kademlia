@@ -87,6 +87,10 @@ type FindNodeResult struct {
 
 func (kc *KademliaCore) FindNode(req FindNodeRequest, res *FindNodeResult) error {
 	// TODO: Implement.
+	kc.kademlia.UpdateContacts(req.Sender)
+	res.MsgID = CopyID(req.MsgID)
+	res.Nodes = k.FindCloseNodes(req.NodeID, kc.kademlia.NodeID)
+
 	return nil
 }
 

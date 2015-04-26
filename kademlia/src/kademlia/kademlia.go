@@ -13,18 +13,18 @@ import (
 )
 
 const (
-	alpha   = 3
-	b       = 8 * IDBytes
-	k       = 20
-	kb_size = 160
+	alpha        = 3
+	b            = 8 * IDBytes
+	k            = 20
+	bucket_count = 160
 )
 
 // Kademlia type. You can put whatever state you need in this.
 type Kademlia struct {
-	NodeID        ID
-	SelfContact   Contact
-	BucketList    []KBucket
-	Table         map[ID][]byte
+	NodeID      ID
+	SelfContact Contact
+	BucketList  []KBucket
+	Table       map[ID][]byte
 }
 
 func NewKademlia(laddr string) *Kademlia {
@@ -33,7 +33,7 @@ func NewKademlia(laddr string) *Kademlia {
 	k := new(Kademlia)
 	k.NodeID = NewRandomID()
 	// only 160 nodes in this system
-	k.BucketList = make([]KBucket, kb_size)
+	k.BucketList = make([]KBucket, bucket_count)
 
 	// initialize all k-buckets
 	for i := 0; i < b; i++ {
@@ -118,6 +118,7 @@ func (k *Kademlia) DoPing(host net.IP, port uint16) string {
 	// update contact in kbucket of this kademlia
 	updated := pong.Sender
 	k.UpdateContactInKBucket(&updated)
+	// find kbucket that should hold this contact
 
 	return "OK: Contact updated in KBucket"
 }
@@ -201,7 +202,7 @@ func (k *Kademlia) DoFindValue(contact *Contact, searchKey ID) string {
 	// update contact in kbucket of this kademlia
 	k.UpdateContactInKBucket(contact)
 
-	return "OK: Contact updated in KBucket"	
+	return "OK: Contact updated in KBucket"
 }
 
 func (k *Kademlia) LocalFindValue(searchKey ID) string {
@@ -227,4 +228,41 @@ func (k *Kademlia) DoIterativeFindValue(key ID) string {
 func (k *Kademlia) UpdateContactInKBucket(update *Contact) {
 	bucket := k.FindKBucket(update.NodeID)
 	bucket.Update(*update)
+}
+
+// jwhang: updates each contact
+func (k *Kademlia) UpdateContacts(contact Contact) {
+	prefixLen := k.NodeID.Xor(contact.NodeID).PrefixLen()
+	currentBucket := k.BucketList[pre]
+	currentBucket.Update(contact)
+}
+
+// jwhang: FindCloseNodes: to be used in FindNode
+func (k *Kademlia) FindCloseContacts(k ID, req ID) []Contact {
+	prefixLen := k.NodeID.Xor(contact.NodeID).PrefixLen()
+	contacts := make([]Contact, 0, k)
+
+	if bucket_count > pre {
+		AddBucketToSlice(k, requester, pre, &nodes)
+	} else {
+	}
+
+}
+
+func (k *Kademlia) AddBucketToSlice(requester ID, bucketNum int, source *[]Contact) {
+	k.contacts_mutex[bucketNum].Lock()
+	k.AddBucketContentsToSlice(k.BucketList[bucketNum], requester, source)
+	k.contacts_mutex[bucketNum].Unlock()
+}
+
+func (k *Kademlia) AddBucketContentsToSlice(blist []KBucket, requester int, source *[]Contact) {
+	count := 0
+	emptySpace := cap(source) - len(source)
+	for b := blist[0]; b != nil && count < emptySpace; b++ {
+		if false == con.Value.(Contact).NodeID.Equals(requester) {
+			*s = append(*s, con.Value.(Contact))
+			count += 1
+		}
+	}
+	return
 }
