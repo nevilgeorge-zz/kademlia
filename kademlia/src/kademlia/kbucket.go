@@ -2,11 +2,6 @@ package kademlia
 
 import (
 	"fmt"
-	//"log"
-	//"net"
-	//"net/http"
-	//"net/rpc"
-	//"strconv"
 )
 
 // KBucket struct
