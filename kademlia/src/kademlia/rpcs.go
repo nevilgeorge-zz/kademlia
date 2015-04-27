@@ -62,10 +62,13 @@ type StoreResult struct {
 }
 
 func (kc *KademliaCore) Store(req StoreRequest, res *StoreResult) error {
-	// kb := kc.kademlia.UpdateContact(req.Sender) // haven't been implemented yet
 	kc.kademlia.Table[req.Key] = req.Value
-	res.MsgID = req.MsgID
+	res.MsgID = CopyID(req.MsgID)
 	res.Err = nil
+
+	// update contact in kbucket
+	kc.kademlia.UpdateContactInKBucket(&req.Sender)
+
 	return nil
 }
 
@@ -89,6 +92,9 @@ func (kc *KademliaCore) FindNode(req FindNodeRequest, res *FindNodeResult) error
 	kc.kademlia.UpdateContacts(req.Sender)
 	res.MsgID = CopyID(req.MsgID)
 	res.Nodes = kc.kademlia.FindCloseContacts(req.NodeID, kc.kademlia.NodeID)
+
+	// update contact in kbucket
+	kc.kademlia.UpdateContactInKBucket(&req.Sender)
 
 	return nil
 }
