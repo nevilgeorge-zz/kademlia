@@ -33,18 +33,17 @@ type PongMessage struct {
 }
 
 func (kc *KademliaCore) Ping(ping PingMessage, pong *PongMessage) error {
-	pong.MsgID = CopyID(ping.MsgID)
-
 	// Specify the sender
 	// Update contact, etc
 	// sender is this node
 	c := kc.kademlia.SelfContact
 	pong.Sender = c
-	for i := 0; i < len(kc.kademlia.BucketList); i += 1 { // jwhang: TODO make this multithreaded?
-		kc.kademlia.BucketList[i].Update(ping.Sender)
-	}
+	pong.MsgID = CopyID(ping.MsgID)
 
-	return nil // not sure what to do with error
+	// update contact in this kademlia kbucket
+	kc.kademlia.UpdateContactInKBucket(&ping.Sender)
+
+	return nil
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -63,10 +62,13 @@ type StoreResult struct {
 }
 
 func (kc *KademliaCore) Store(req StoreRequest, res *StoreResult) error {
-	// kb := kc.kademlia.UpdateContact(req.Sender) // haven't been implemented yet
 	kc.kademlia.Table[req.Key] = req.Value
-	res.MsgID = req.MsgID
+	res.MsgID = CopyID(req.MsgID)
 	res.Err = nil
+
+	// update contact in kbucket
+	kc.kademlia.UpdateContactInKBucket(&req.Sender)
+
 	return nil
 }
 
@@ -89,7 +91,10 @@ func (kc *KademliaCore) FindNode(req FindNodeRequest, res *FindNodeResult) error
 	// TODO: Implement.
 	kc.kademlia.UpdateContacts(req.Sender)
 	res.MsgID = CopyID(req.MsgID)
-	res.Nodes = k.FindCloseNodes(req.NodeID, kc.kademlia.NodeID)
+	res.Nodes = kc.kademlia.FindCloseContacts(req.NodeID, kc.kademlia.NodeID)
+
+	// update contact in kbucket
+	kc.kademlia.UpdateContactInKBucket(&req.Sender)
 
 	return nil
 }
