@@ -222,7 +222,12 @@ func (k *Kademlia) LocalFindValue(searchKey ID) string {
 	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
 	fmt.Println("LocalFindValue")
-	return "ERR: Not implemented"
+	val := k.Table[searchKey]
+	if val == nil || len(val) == 0 {
+		return "ERR: Value not found in local table"
+	}
+
+	return "ERR: Found value in local table"
 }
 
 func (k *Kademlia) DoIterativeFindNode(id ID) string {
