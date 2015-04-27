@@ -40,6 +40,11 @@ func NewKademlia(laddr string) *Kademlia {
 		k.BucketList[i].Initialize()
 	}
 
+	// initialize all k-buckets
+	for i := 0; i < b; i++ {
+		k.BucketList[i].Initialize()
+	}
+
 	// Set up RPC server
 	// NOTE: KademliaCore is just a wrapper around Kademlia. This type includes
 	// the RPC functions.
