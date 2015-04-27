@@ -179,6 +179,9 @@ func (k *Kademlia) DoFindNode(contact *Contact, searchKey ID) string {
 		log.Fatal("ERR: ", err)
 	}
 
+	if result.Err != nil {
+		return "ERR: Error occurred in FindNode RPC"
+	}
 	// update contact in kbucket of this kademlia
 	k.UpdateContactInKBucket(contact)
 
@@ -207,8 +210,11 @@ func (k *Kademlia) DoFindValue(contact *Contact, searchKey ID) string {
 	}
 
 	// update contact in kbucket of this kademlia
-	k.UpdateContactInKBucket(contact)
+	if result.Err != nil {
+		return "ERR: Error occurred in FindValue RPC"
+	}
 
+	k.UpdateContactInKBucket(contact)
 	return "OK: Contact updated in KBucket"
 }
 

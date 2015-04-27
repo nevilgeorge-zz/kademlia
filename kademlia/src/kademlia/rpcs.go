@@ -92,6 +92,7 @@ func (kc *KademliaCore) FindNode(req FindNodeRequest, res *FindNodeResult) error
 	kc.kademlia.UpdateContacts(req.Sender)
 	res.MsgID = CopyID(req.MsgID)
 	res.Nodes = kc.kademlia.FindCloseContacts(req.NodeID, kc.kademlia.NodeID)
+	res.Err = nil
 
 	// update contact in kbucket
 	kc.kademlia.UpdateContactInKBucket(&req.Sender)
@@ -119,5 +120,20 @@ type FindValueResult struct {
 
 func (kc *KademliaCore) FindValue(req FindValueRequest, res *FindValueResult) error {
 	// TODO: Implement.
+	res.MsgID = CopyID(req.MsgID)
+	res.Nodes = kc.kademlia.FindCloseContacts(req.Sender.NodeID, kc.kademlia.NodeID)
+	val := kc.kademlia.Table[req.Key]
+	if val == nil || len(val) == 0 {
+		err := new(NotFoundError)
+		err.msg = "Value is nil or is empty byte array"
+		res.Err = err
+		return err
+	}
+	res.Value = val
+	res.Err = nil
+
+	// update contact in kbucket
+	kc.kademlia.UpdateContactInKBucket(&req.Sender)
+
 	return nil
 }
