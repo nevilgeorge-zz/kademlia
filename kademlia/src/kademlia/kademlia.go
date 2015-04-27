@@ -95,9 +95,16 @@ func (k *Kademlia) FindContact(nodeId ID) (*Contact, error) {
 	if nodeId == k.NodeID {
 		return &k.SelfContact, nil
 	}
-	kb := k.FindKBucket(nodeId)
-	return &kb.ContactList[0], nil
-	//return nil, &NotFoundError{nodeId, "Not found"}
+	for _, kb := range k.BucketList {
+		for _, c := range kb.ContactList {
+			if c.NodeID.Equals(nodeId) {
+				return &c, nil
+			}
+		}
+	}
+	err := new(NotFoundError)
+	err.msg = "Contact not found!"
+	return nil, err
 }
 
 // This is the function to perform the RPC
@@ -177,6 +184,9 @@ func (k *Kademlia) DoFindNode(contact *Contact, searchKey ID) string {
 		log.Fatal("ERR: ", err)
 	}
 
+	if result.Err != nil {
+		return "ERR: Error occurred in FindNode RPC"
+	}
 	// update contact in kbucket of this kademlia
 	k.UpdateContactInKBucket(contact)
 
@@ -205,8 +215,11 @@ func (k *Kademlia) DoFindValue(contact *Contact, searchKey ID) string {
 	}
 
 	// update contact in kbucket of this kademlia
-	k.UpdateContactInKBucket(contact)
+	if result.Err != nil {
+		return "ERR: Error occurred in FindValue RPC"
+	}
 
+	k.UpdateContactInKBucket(contact)
 	return "OK: Contact updated in KBucket"
 }
 
@@ -214,7 +227,12 @@ func (k *Kademlia) LocalFindValue(searchKey ID) string {
 	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
 	fmt.Println("LocalFindValue")
-	return "ERR: Not implemented"
+	val := k.Table[searchKey]
+	if val == nil || len(val) == 0 {
+		return "ERR: Value not found in local table"
+	}
+
+	return "ERR: Found value in local table"
 }
 
 func (k *Kademlia) DoIterativeFindNode(id ID) string {
@@ -261,19 +279,19 @@ func (k *Kademlia) AddBucketToSlice(requester ID, bucketNum int, source *[]Conta
 }
 
 func (k *Kademlia) AddBucketContentsToSlice(blist KBucket, requester ID, source *[]Contact) {
-	count := 0
-	i := 0
-	emptySpace := cap(*source) - len(*source)
-	for count < emptySpace {
-		b := blist.ContactList[i]
-		if b == nil {
-			break
-		}
-		if b.Value.(Contact).NodeID.Equals(requester) {
-			*source = append(*source, b.Value.(Contact))
-			count += 1
-		}
-		i += 1
-	}
-	return
+	// count := 0
+	// i := 0
+	// emptySpace := cap(*source) - len(*source)
+	// for count < emptySpace {
+	// 	b := blist.ContactList[i]
+	// 	if b == nil {
+	// 		break
+	// 	}
+	// 	if b.Value.(Contact).NodeID.Equals(requester) {
+	// 		*source = append(*source, b.Value.(Contact))
+	// 		count += 1
+	// 	}
+	// 	i += 1
+	// }
+	// return
 }
