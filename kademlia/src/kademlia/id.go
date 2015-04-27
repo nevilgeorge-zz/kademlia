@@ -98,7 +98,7 @@ func IDFromString(idstr string) (ret ID, err error) {
 	return
 }
 
-func IDFromInteger(idint string) (ret ID, err error) {
+func IDFromInteger(idint int) (ret ID, err error) {
 	idstr := strconv.Itoa(idint)
 	return IDFromString(idstr)
 }
