@@ -30,7 +30,7 @@ var hostIP = getHostIP()
 // TestStore
 func TestStore(t *testing.T) {
 	kc := new(KademliaCore)
-	kc.kademlia = NewKademlia()
+	kc.kademlia = NewKademlia("1234567890")
 	senderID := NewRandomID()
 	messageID := NewRandomID()
 	key, err := IDFromString("1234567890")
@@ -66,7 +66,7 @@ func TestStore(t *testing.T) {
 // TestFindValue
 func TestStoreKeyWithFindValue(t *testing.T) {
 	kc := new(KademliaCore)
-	kc.kademlia = NewKademlia()
+	kc.kademlia = NewKademlia("1234567890")
 	senderID, messageID := NewRandomID(), NewRandomID()
 	key, err := IDFromString("1234567890")
 	if err != nil {
