@@ -6,6 +6,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"math/rand"
+	"strconv"
 )
 
 // IDs are 160-bit ints. We're going to use byte arrays with a number of
@@ -58,14 +59,14 @@ func (id ID) LessThanOrEquals(other ID) bool {
 // Return the number of consecutive zeroes, starting from the low-order bit, in
 // a ID.
 func (id ID) PrefixLen() int {
-    for i := 0; i < IDBytes; i++ {
-        for j := 7; j >= 0; j-- {
-            if (id[i]>>uint8(j))&0x1 != 0 {
-                return (8 * i) + (7 - j)
-            }
-        }
-    }
-    return IDBytes * 8
+	for i := 0; i < IDBytes; i++ {
+		for j := 7; j >= 0; j-- {
+			if (id[i]>>uint8(j))&0x1 != 0 {
+				return (8 * i) + (7 - j)
+			}
+		}
+	}
+	return IDBytes * 8
 }
 
 // Generate a new ID from nothing.
@@ -95,6 +96,11 @@ func IDFromString(idstr string) (ret ID, err error) {
 		ret[i] = bytes[i]
 	}
 	return
+}
+
+func IDFromInteger(idint string) (ret ID, err error) {
+	idstr := strconv.Itoa(idint)
+	return IDFromString(idstr)
 }
 
 func Checksum(data []byte) [16]byte {
