@@ -129,6 +129,7 @@ func (k *Kademlia) DoPing(host net.IP, port uint16) string {
 	// create new ping to send to the other node
 	ping := new(PingMessage)
 	ping.MsgID = NewRandomID()
+	ping.Sender = k.SelfContact
 	var pong PongMessage
 	err = client.Call("KademliaCore.Ping", ping, &pong)
 	if err != nil {
