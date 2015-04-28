@@ -201,12 +201,21 @@ func (k *Kademlia) DoFindNode(contact *Contact, searchKey ID) string {
 	// jwhang: taken directly from print_contact in main.go
 	// probably a bad idea. need to abstract it out
 	response := "OK:\n"
+	found := false
 	for i := 0; i < len(result.Nodes); i++ {
 		c := result.Nodes[i]
-		response += "	Host = " + c.Host.String()
-		response += "	Port = " + strconv.Itoa(int(c.Port)) + "\n"
+		if c.Host != nil {
+			found = true
+			response += "	Host = " + c.Host.String()
+			response += "	Port = " + strconv.Itoa(int(c.Port)) + "\n"
+		}
 	}
-	return response
+
+	if found {
+		return response
+	} else {
+		return "ERR: NOT FOUND"
+	}
 }
 
 func (k *Kademlia) DoFindValue(contact *Contact, searchKey ID) string {

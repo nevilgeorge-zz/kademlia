@@ -14,7 +14,6 @@ type KBucket struct {
 
 // Initialize KBuckets, called 160 times when Kademlia is instantiated in kademlia.go
 func (kb *KBucket) Initialize() {
-	fmt.Println("Initialize")
 	kb.NodeID = NewRandomID()
 	// create slice for ContactList
 	//kb.ContactList = make([]Contact, k)
