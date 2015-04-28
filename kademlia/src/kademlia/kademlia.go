@@ -35,6 +35,9 @@ func NewKademlia(laddr string) *Kademlia {
 	// only 160 nodes in this system
 	k.BucketList = make([]KBucket, bucket_count)
 
+	// initialize the data entry table
+	k.Table = make(map[ID][]byte)
+
 	// initialize all k-buckets
 	for i := 0; i < b; i++ {
 		k.BucketList[i].Initialize()
@@ -69,8 +72,16 @@ func NewKademlia(laddr string) *Kademlia {
 
 func (k *Kademlia) FindKBucket(nodeId ID) KBucket {
 	fmt.Println("FindKBucket")
-	distance := k.NodeID.Xor(nodeId)
-	index := distance.PrefixLen()
+	prefixLen := k.NodeID.Xor(nodeId).PrefixLen()
+	var index int
+
+	if prefixLen == 160 {
+		index = 0
+	} else {
+		index = 159 - prefixLen
+	}
+	fmt.Print("LOL")
+
 	return k.BucketList[index]
 }
 
@@ -107,7 +118,8 @@ func (k *Kademlia) DoPing(host net.IP, port uint16) string {
 	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
 	fmt.Println("DoPing")
-	address := string(host) + ":" + strconv.Itoa(int(port))
+	address := host.String() + ":" + strconv.Itoa(int(port))
+	fmt.Println(address)
 	client, err := rpc.DialHTTP("tcp", address)
 	if err != nil {
 		log.Fatal("ERR: ", err)
@@ -134,7 +146,7 @@ func (k *Kademlia) DoStore(contact *Contact, key ID, value []byte) string {
 	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
 	fmt.Println("DoStore")
-	address := string(contact.Host) + ":" + strconv.Itoa(int(contact.Port))
+	address := string(contact.Host.String()) + ":" + strconv.Itoa(int(contact.Port))
 	client, err := rpc.DialHTTP("tcp", address)
 	if err != nil {
 		log.Fatal("ERR: ", err)
@@ -227,7 +239,7 @@ func (k *Kademlia) LocalFindValue(searchKey ID) string {
 		return "ERR: Value not found in local table"
 	}
 
-	return "ERR: Found value in local table"
+	return "OK: " + string(val)
 }
 
 func (k *Kademlia) DoIterativeFindNode(id ID) string {
@@ -258,13 +270,38 @@ func (k *Kademlia) UpdateContacts(contact Contact) {
 // jwhang: FindCloseNodes: to be used in FindNode
 func (k *Kademlia) FindCloseContacts(key ID, req ID) []Contact {
 	prefixLen := k.NodeID.Xor(key).PrefixLen()
-	contacts := make([]Contact, 0, 160)
-
-	if bucket_count > prefixLen {
-		k.AddBucketToSlice(req, prefixLen, &contacts)
+	var index int
+	if prefixLen == 160 {
+		index = 0
 	} else {
+		index = 159 - prefixLen
 	}
+	contacts := make([]Contact, 20)
+
+	for _, val := range k.BucketList[index].ContactList {
+		contacts = append(contacts, val)
+	}
+
+	if len(contacts) != 20 {
+		for _, val := range k.BucketList[index+1].ContactList {
+			contacts = append(contacts, val)
+			if len(contacts) == 20 {
+				break
+			}
+		}
+	}
+
 	return contacts
+	/*
+		prefixLen := k.NodeID.Xor(key).PrefixLen()
+		contacts := make([]Contact, 0, 160)
+
+		if bucket_count > prefixLen {
+			k.AddBucketToSlice(req, prefixLen, &contacts)
+		} else {
+		}
+		return contacts
+	*/
 }
 
 func (k *Kademlia) AddBucketToSlice(requester ID, bucketNum int, source *[]Contact) {
