@@ -16,7 +16,7 @@ type KBucket struct {
 func (kb *KBucket) Initialize() {
 	kb.NodeID = NewRandomID()
 	// create slice for ContactList
-	//kb.ContactList = make([]Contact, k)
+	kb.ContactList = make([]Contact, 0, k)
 }
 
 // Remove the contact corresponding to a given ID from the KBucket
@@ -85,6 +85,12 @@ func (kb *KBucket) Update(updated Contact) {
 		temp.NodeID = CopyID(updated.NodeID)
 		temp.Host = updated.Host
 		temp.Port = updated.Port
+		fmt.Println("NodeID:")
+		fmt.Println(temp.NodeID)
+		fmt.Println("Host:")
+		fmt.Println(temp.Host)
+		fmt.Println("Port:")
+		fmt.Println(temp.Port)
 		kb.AddContact(&kb.ContactList, *temp) // jwhang: kinda fishy.. not sure if this is ok
 	} else {
 		// ping first node in slice

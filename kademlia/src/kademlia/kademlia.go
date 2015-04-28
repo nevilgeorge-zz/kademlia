@@ -128,6 +128,7 @@ func (k *Kademlia) DoPing(host net.IP, port uint16) string {
 
 	// create new ping to send to the other node
 	ping := new(PingMessage)
+	ping.Sender = k.SelfContact
 	ping.MsgID = NewRandomID()
 	ping.Sender = k.SelfContact
 	var pong PongMessage
@@ -276,6 +277,7 @@ func (k *Kademlia) DoIterativeFindValue(key ID) string {
 
 func (k *Kademlia) UpdateContactInKBucket(update *Contact) {
 	bucket := k.FindKBucket(update.NodeID)
+	fmt.Println("CALLING UPDATE NOW")
 	bucket.Update(*update)
 }
 
