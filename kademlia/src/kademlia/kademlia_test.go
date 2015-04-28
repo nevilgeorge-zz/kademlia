@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"net"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -30,10 +31,10 @@ var hostIP = getHostIP()
 // TestStore
 func TestStore(t *testing.T) {
 	kc := new(KademliaCore)
-	kc.kademlia = NewKademlia("1234567890")
+	kc.kademlia = NewKademlia("localhost:1234")
 	senderID := NewRandomID()
 	messageID := NewRandomID()
-	key, err := IDFromString("1234567890")
+	key, err := IDFromString("1234567890123456789012345678901234567890")
 	if err != nil {
 		t.Error("Couldn't encode key")
 	}
@@ -52,23 +53,25 @@ func TestStore(t *testing.T) {
 	res := new(StoreResult)
 	err = kc.Store(req, res)
 	if err != nil {
-		t.Error("Failed to store key-value pair")
+		t.Error("TestStore: Failed to store key-value pair")
+		t.Fail()
 	}
 	if messageID.Equals(res.MsgID) == false {
-		t.Error("TestStore Failed: MessageID Doesn't match")
+		t.Error("TestStore: MessageID Doesn't match")
 		t.Fail()
 	}
 	if bytes.Equal((*kc).kademlia.Table[key], value) == false {
-		t.Error("Value stored is incorrect")
+		t.Error("TestStore: Value stored is incorrect")
+		t.Fail()
 	}
 }
 
 // TestFindValue
 func TestStoreKeyWithFindValue(t *testing.T) {
 	kc := new(KademliaCore)
-	kc.kademlia = NewKademlia("1234567890")
+	kc.kademlia = NewKademlia("localhost:1235")
 	senderID, messageID := NewRandomID(), NewRandomID()
-	key, err := IDFromString("1234567890")
+	key, err := IDFromString("1234567890123456789012345678901234567890")
 	if err != nil {
 		t.Error("Could not encode key")
 		t.Fail()
@@ -76,7 +79,7 @@ func TestStoreKeyWithFindValue(t *testing.T) {
 	value := []byte("somedata")
 	con := Contact{
 		NodeID: senderID,
-		Host:   net.IPv4(0x01, 0x02, 0x03, 0x04),
+		Host:   net.IPv4(127, 0, 0, 1),
 		Port:   1234,
 	}
 	req := StoreRequest{
@@ -120,8 +123,114 @@ func TestStoreKeyWithFindValue(t *testing.T) {
 	}
 }
 
-// TestFindNode
+// TestPingSelf
+// Pings itself and sees if it exists in the contact
+func TestPingSelf(t *testing.T) {
+	kc := new(KademliaCore)
+	kc.kademlia = NewKademlia("localhost:1234")
+	senderID := NewRandomID()
+	messageID := NewRandomID()
+	key, err := IDFromString("1234567890123456789012345678901234567890")
+	if err != nil {
+		t.Error("Couldn't encode key")
+	}
+	value := []byte("somedata")
+	selfHost := net.IPv4(127, 0, 0, 1)
+	selfPort := uint16(1234)
+	res := kc.kademlia.DoPing(selfHost, selfPort)
+	if strings.Contains(res, "ERR") {
+		t.Error("TestPingSelf: Failed to ping itself")
+		t.Fail()
+	}
+}
+
+func TestPingAnother(t *testing.T) {
+	kc1 := new(KademliaCore)
+	kc2 := new(KademliaCore)
+	kc1.kademlia = NewKademlia("localhost:7980")
+	kc2.kademlia = NewKademlia("localhost:1234")
+	k21ID := kc1.kademlia.NodeID
+	kc1Host := net.IPv4(127, 0, 0, 1)
+	kc2Port := uint16(7890)
+	kc2ID := kc2.kademlia.NodeID
+	kc2Host := net.IPv4(127, 0, 0, 1)
+	kc2Port := uint16(1234)
+	res := kc1.kademlia.DoPing(kc2Host, kc2Port)
+	if strings.Contains(res, "ERR") {
+		t.Error("TestPingAnother: Failed to ping node 2 from node 1")
+		t.Fail()
+	}
+	res, err = kc1.FindContact(kc2ID)
+	if err != nil {
+		t.Error("TestPingAnother: The sender doesn't have the receiver's contact!")
+		t.Fail()
+	}
+	if !(res.NodeID.Equals(kc2ID)) || res.Host.String() != kc2Host.String() || res.Port != kc2Port {
+		t.Error("TestPingAnother: The sender's contact of receiver doesn't match with the actual receiver info!")
+		t.Fail()
+	}
+	res, err = kc2.FindContact(kc1ID)
+	if err != nil {
+		t.Error("TestPingAnother: The receiver doesn't have sender's contact!")
+		t.Fail()
+	}
+	if !(res.NodeID.Equals(kc1ID)) || res.Host.String() != kc1Host.String() || res.Port != kc1Port {
+		t.Error("TestPingAnother: The receiver's contact of the sender doesn't match with the actual sender info")
+		t.Fail()
+	}
+}
+
 func TestFindNode(t *testing.T) {
-	// TODO
-	// Implement
+	kc1 := new(KademliaCore)
+	kc2 := new(KademliaCore)
+	kc1.kademlia = NewKademlia("localhost:7980")
+	kc2.kademlia = NewKademlia("localhost:1234")
+	k21ID := kc1.kademlia.NodeID
+	kc1Host := net.IPv4(127, 0, 0, 1)
+	kc2Port := uint16(7890)
+	kc2ID := kc2.kademlia.NodeID
+	kc2Host := net.IPv4(127, 0, 0, 1)
+	kc2Port := uint16(1234)
+
+	res := kc1.kademlia.DoPing(kc2Host, kc2Port)
+	if strings.Contains(res, "ERR") {
+		t.Error("TestPingAnother: Failed to ping node 2 from node 1")
+		t.Fail()
+	}
+
+	senderID := NewRandomID()
+	messageID := NewRandomID()
+	key, err := IDFromString("1234567890123456789012345678901234567890")
+	if err != nil {
+		t.Error("Couldn't encode key")
+	}
+	value := []byte("somedata")
+	con := Contact{
+		NodeID: senderID,
+		Host:   net.IPv4(0x01, 0x02, 0x03, 0x04),
+		Port:   1234,
+	}
+	req := StoreRequest{
+		Sender: con,
+		MsgID:  messageID,
+		Key:    key,
+		Value:  value,
+	}
+	res := new(StoreResult)
+	err = kc1.Store(req, res)
+	if err != nil {
+		t.Error("Failed to store key-value pair")
+		t.Fail()
+	}
+
+	con = Contact{
+		NodeID: kc1ID,
+		Host:   kc1Host,
+		Port:   kc1Port,
+	}
+	res = kc2.kademlia(DoFindNode, con, key)
+	if strings.Contains(res, "ERR") {
+		t.Error("DoFindNode failed")
+		t.Fail()
+	}
 }
