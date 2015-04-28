@@ -112,7 +112,7 @@ func (k *Kademlia) DoPing(host net.IP, port uint16) string {
 	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
 	fmt.Println("DoPing")
-	address := string(host) + ":" + strconv.Itoa(int(port))
+	address := host.String() + ":" + strconv.Itoa(int(port))
 	client, err := rpc.DialHTTP("tcp", address)
 	if err != nil {
 		log.Fatal("ERR: ", err)
@@ -139,7 +139,7 @@ func (k *Kademlia) DoStore(contact *Contact, key ID, value []byte) string {
 	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
 	fmt.Println("DoStore")
-	address := string(contact.Host) + ":" + strconv.Itoa(int(contact.Port))
+	address := contact.host.String() + ":" + strconv.Itoa(int(contact.Port))
 	client, err := rpc.DialHTTP("tcp", address)
 	if err != nil {
 		log.Fatal("ERR: ", err)
@@ -167,7 +167,7 @@ func (k *Kademlia) DoFindNode(contact *Contact, searchKey ID) string {
 	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
 	fmt.Println("FindFindNode")
-	address := string(contact.Host) + ":" + strconv.Itoa(int(contact.Port))
+	address := contact.host.String() + ":" + strconv.Itoa(int(contact.Port))
 	client, err := rpc.DialHTTP("tcp", address)
 	if err != nil {
 		log.Fatal("ERR: ", err)
@@ -197,7 +197,7 @@ func (k *Kademlia) DoFindValue(contact *Contact, searchKey ID) string {
 	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
 	fmt.Println("DoFindValue")
-	address := string(contact.Host) + ":" + strconv.Itoa(int(contact.Port))
+	address := contact.host.String() + ":" + strconv.Itoa(int(contact.Port))
 	client, err := rpc.DialHTTP("tcp", address)
 	if err != nil {
 		log.Fatal("ERR: ", err)

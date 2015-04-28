@@ -1,4 +1,4 @@
-// netIds: gne454
+// netIds: gne454, nsg622
 package main
 
 import (
