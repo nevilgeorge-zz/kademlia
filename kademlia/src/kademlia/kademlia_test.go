@@ -234,3 +234,58 @@ func TestFindNode(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestFindValue(t *testing.T) {
+	kc1 := new(KademliaCore)
+	kc2 := new(KademliaCore)
+	kc1.kademlia = NewKademlia("localhost:7980")
+	kc2.kademlia = NewKademlia("localhost:1234")
+	k21ID := kc1.kademlia.NodeID
+	kc1Host := net.IPv4(127, 0, 0, 1)
+	kc2Port := uint16(7890)
+	kc2ID := kc2.kademlia.NodeID
+	kc2Host := net.IPv4(127, 0, 0, 1)
+	kc2Port := uint16(1234)
+
+	res := kc1.kademlia.DoPing(kc2Host, kc2Port)
+	if strings.Contains(res, "ERR") {
+		t.Error("TestPingAnother: Failed to ping node 2 from node 1")
+		t.Fail()
+	}
+
+	senderID := NewRandomID()
+	messageID := NewRandomID()
+	key, err := IDFromString("1234567890123456789012345678901234567890")
+	if err != nil {
+		t.Error("Couldn't encode key")
+	}
+	value := []byte("somedata")
+	con := Contact{
+		NodeID: senderID,
+		Host:   net.IPv4(0x01, 0x02, 0x03, 0x04),
+		Port:   1234,
+	}
+	req := StoreRequest{
+		Sender: con,
+		MsgID:  messageID,
+		Key:    key,
+		Value:  value,
+	}
+	res := new(StoreResult)
+	err = kc1.Store(req, res)
+	if err != nil {
+		t.Error("Failed to store key-value pair")
+		t.Fail()
+	}
+
+	con = Contact{
+		NodeID: kc1ID,
+		Host:   kc1Host,
+		Port:   kc1Port,
+	}
+	res = kc2.kademlia(DoFindValue, con, key)
+	if strings.Contains(res, "ERR") {
+		t.Error("DoFindNode failed")
+		t.Fail()
+	}
+}
