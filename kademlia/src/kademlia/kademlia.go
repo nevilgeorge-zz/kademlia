@@ -70,7 +70,7 @@ func NewKademlia(laddr string) *Kademlia {
 	return k
 }
 
-func (k *Kademlia) FindKBucket(nodeId ID) KBucket {
+func (k *Kademlia) FindKBucket(nodeId ID) *KBucket {
 	fmt.Println("FindKBucket")
 	prefixLen := k.NodeID.Xor(nodeId).PrefixLen()
 	var index int
@@ -79,9 +79,8 @@ func (k *Kademlia) FindKBucket(nodeId ID) KBucket {
 	} else {
 		index = 159 - prefixLen
 	}
-	fmt.Print("LOL")
 
-	return k.BucketList[index]
+	return &k.BucketList[index]
 }
 
 type NotFoundError struct {
@@ -100,8 +99,11 @@ func (k *Kademlia) FindContact(nodeId ID) (*Contact, error) {
 	if nodeId == k.NodeID {
 		return &k.SelfContact, nil
 	}
-	for _, kb := range k.BucketList {
-		for _, c := range kb.ContactList {
+	fmt.Println(len(k.BucketList))
+	for i := 0; i < len(k.BucketList); i++ {
+		kb := k.BucketList[i]
+		for j := 0; j < len(kb.ContactList); j++ {
+			c := kb.ContactList[j]
 			if c.NodeID.Equals(nodeId) {
 				return &c, nil
 			}
@@ -172,8 +174,8 @@ func (k *Kademlia) DoStore(contact *Contact, key ID, value []byte) string {
 func (k *Kademlia) DoFindNode(contact *Contact, searchKey ID) string {
 	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
-	fmt.Println("FindFindNode")
-	address := string(contact.Host) + ":" + strconv.Itoa(int(contact.Port))
+	fmt.Println("FindNode")
+	address := contact.Host.String() + ":" + strconv.Itoa(int(contact.Port))
 	client, err := rpc.DialHTTP("tcp", address)
 	if err != nil {
 		log.Fatal("ERR: ", err)
@@ -196,7 +198,15 @@ func (k *Kademlia) DoFindNode(contact *Contact, searchKey ID) string {
 	// update contact in kbucket of this kademlia
 	k.UpdateContactInKBucket(contact)
 
-	return "OK: Contact updated in KBucket"
+	// jwhang: taken directly from print_contact in main.go
+	// probably a bad idea. need to abstract it out
+	response := "OK:\n"
+	for i := 0; i < len(result.Nodes); i++ {
+		c := result.Nodes[i]
+		response += "	Host = " + c.Host.String()
+		response += "	Port = " + strconv.Itoa(int(c.Port)) + "\n"
+	}
+	return response
 }
 
 func (k *Kademlia) DoFindValue(contact *Contact, searchKey ID) string {
@@ -261,7 +271,12 @@ func (k *Kademlia) UpdateContactInKBucket(update *Contact) {
 
 // jwhang: updates each contact
 func (k *Kademlia) UpdateContacts(contact Contact) {
+	fmt.Println("UpdateContacts")
 	prefixLen := k.NodeID.Xor(contact.NodeID).PrefixLen()
+	if prefixLen == 160 {
+		prefixLen = 0
+	}
+
 	currentBucket := k.BucketList[prefixLen]
 	currentBucket.Update(contact)
 }
@@ -269,6 +284,7 @@ func (k *Kademlia) UpdateContacts(contact Contact) {
 // nsg622: finds closest nodes
 // assumes closest nodes are in the immediate kbucket and the next one
 func (k *Kademlia) FindCloseContacts(key ID, req ID) []Contact {
+	fmt.Println("FindCloseContacts")
 	prefixLen := k.NodeID.Xor(key).PrefixLen()
 	var index int
 	if prefixLen == 160 {

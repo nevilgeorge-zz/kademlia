@@ -35,9 +35,15 @@ func (kb *KBucket) RemoveContact(targetID ID) bool {
 }
 
 // Adds a given contact to the end of the kbucket
-func (kb *KBucket) AddContact(newContact Contact) {
+func (kb *KBucket) AddContact(contactList *[]Contact, newContact Contact) {
 	fmt.Println("AddContact")
-	kb.ContactList = append(kb.ContactList, newContact)
+	toAdd := new(Contact)
+	toAdd.NodeID = newContact.NodeID
+	toAdd.Host = newContact.Host
+	toAdd.Port = newContact.Port
+	*contactList = append(*contactList, *toAdd)
+	fmt.Println("Now I have ...")
+	fmt.Println(len(kb.ContactList))
 }
 
 // returns a boolean for whether a given Contact exists in the KBucket and index if it was found
@@ -63,14 +69,16 @@ func (kb *KBucket) Update(updated Contact) {
 	fmt.Println("Update")
 	fmt.Println(len(kb.ContactList))
 	fmt.Print("K is : ")
-	fmt.Println(string(k))
+	fmt.Print(k)
 
 	// check whether the updated contact exists in the KBucket
 	exists, _ := kb.ContainsContact(updated)
 	if exists {
+		fmt.Println("It exists!")
 		// move Contact to the end of the KBucket
 		kb.MoveToTail(updated)
 	} else if len(kb.ContactList) < k {
+		fmt.Println("New contact")
 		// create a new contact for the node and add it to the tail of the KBucket
 		// not sure if a new Contact needs to be created, but that's what the doc says
 		//temp := Contact(CopyID(updated.NodeID), updated.Host, updated.Port)
@@ -78,7 +86,7 @@ func (kb *KBucket) Update(updated Contact) {
 		temp.NodeID = CopyID(updated.NodeID)
 		temp.Host = updated.Host
 		temp.Port = updated.Port
-		kb.AddContact(*temp) // jwhang: kinda fishy.. not sure if this is ok
+		kb.AddContact(&kb.ContactList, *temp) // jwhang: kinda fishy.. not sure if this is ok
 	} else {
 		// ping first node in slice
 		// if it doesn't respond, removeContact(oldContact) and addContact(updated)
@@ -87,7 +95,7 @@ func (kb *KBucket) Update(updated Contact) {
 		ret := kb.Kad.DoPing(firstContact.Host, firstContact.Port)
 		if ret == "Error" { // jwhang TODO: Fix this to nil
 			kb.RemoveContact(firstContact.NodeID)
-			kb.AddContact(updated)
+			kb.AddContact(&kb.ContactList, updated)
 		} else {
 			kb.MoveToTail(firstContact)
 		}
@@ -102,5 +110,5 @@ func (kb *KBucket) MoveToTail(updated Contact) {
 		kb.RemoveContact(updated.NodeID)
 	}
 	// adds to the end of the KBucket
-	kb.AddContact(updated)
+	kb.AddContact(&kb.ContactList, updated)
 }
