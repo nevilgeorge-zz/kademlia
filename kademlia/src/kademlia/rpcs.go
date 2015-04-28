@@ -125,14 +125,17 @@ type FindValueResult struct {
 func (kc *KademliaCore) FindValue(req FindValueRequest, res *FindValueResult) error {
 	// TODO: Implement.
 	res.MsgID = CopyID(req.MsgID)
-	res.Nodes = kc.kademlia.FindCloseContacts(req.Sender.NodeID, kc.kademlia.NodeID)
 	val := kc.kademlia.Table[req.Key]
+	res.Nodes = kc.kademlia.FindCloseContacts(req.Sender.NodeID, kc.kademlia.NodeID)
+
 	if val == nil || len(val) == 0 {
+		res.Value = nil
 		err := new(NotFoundError)
 		err.msg = "Value is nil or is empty byte array"
 		res.Err = err
 		return err
 	}
+	
 	res.Value = val
 	res.Err = nil
 

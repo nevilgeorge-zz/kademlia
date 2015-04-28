@@ -72,15 +72,15 @@ func NewKademlia(laddr string) *Kademlia {
 
 func (k *Kademlia) FindKBucket(nodeId ID) *KBucket {
 	fmt.Println("FindKBucket")
-	prefixLen := k.NodeID.Xor(nodeId).PrefixLen()
-	var index int
-	if prefixLen == 160 {
-		index = 0
-	} else {
-		index = 159 - prefixLen
-	}
-
-	return &k.BucketList[index]
+	distance := k.NodeID.Xor(nodeId)
+	// var index int
+	// if prefixLen == 160 {
+	// 	index = 0
+	// } else {
+	// 	index = 159 - prefixLen
+	// }
+	index := distance.PrefixLen()
+	return &(k.BucketList[index])
 }
 
 type NotFoundError struct {
@@ -297,17 +297,16 @@ func (k *Kademlia) UpdateContacts(contact Contact) {
 // assumes closest nodes are in the immediate kbucket and the next one
 func (k *Kademlia) FindCloseContacts(key ID, req ID) []Contact {
 	fmt.Println("FindCloseContacts")
-	prefixLen := k.NodeID.Xor(key).PrefixLen()
-	fmt.Println("prefixLen is: " + strconv.Itoa(prefixLen))
-	var index int
-	if prefixLen == 160 {
-		index = 0
-	} else {
-		index = 159 - prefixLen
-	}
-	contacts := make([]Contact, 20)
-	fmt.Println("Index is: " + strconv.Itoa(index))
+	distance := k.NodeID.Xor(key)
+	index := distance.PrefixLen()
+	// var index int
+	// if prefixLen == 160 {
+	// 	index = 0
+	// } else {
+	// 	index = 159 - prefixLen
+	// }
 
+	contacts := make([]Contact, 0, 20)
 	for _, val := range k.BucketList[index].ContactList {
 		contacts = append(contacts, val)
 	}
