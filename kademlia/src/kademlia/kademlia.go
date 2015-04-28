@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/rpc"
 	"strconv"
+	"sync"
 )
 
 const (
@@ -21,10 +22,11 @@ const (
 
 // Kademlia type. You can put whatever state you need in this.
 type Kademlia struct {
-	NodeID      ID
-	SelfContact Contact
-	BucketList  []KBucket
-	Table       map[ID][]byte
+	NodeID         ID
+	SelfContact    Contact
+	BucketList     []KBucket
+	Table          map[ID][]byte
+	TableMutexLock sync.Mutex
 }
 
 func NewKademlia(laddr string) *Kademlia {

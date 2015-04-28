@@ -65,7 +65,11 @@ type StoreResult struct {
 func (kc *KademliaCore) Store(req StoreRequest, res *StoreResult) error {
 	valueCopy := make([]byte, len(req.Value))
 	copy(valueCopy, req.Value)
+
+	kc.kademlia.TableMutexLock.Lock()
 	kc.kademlia.Table[CopyID(req.Key)] = valueCopy
+	kc.kademlia.TableMutexLock.Unlock()
+
 	res.MsgID = CopyID(req.MsgID)
 	res.Err = nil
 
@@ -124,7 +128,9 @@ type FindValueResult struct {
 func (kc *KademliaCore) FindValue(req FindValueRequest, res *FindValueResult) error {
 	// TODO: Implement.
 	res.MsgID = CopyID(req.MsgID)
+	//kc.kademlia.TableMutexLock.Lock() // jwhang: Pretty sure you don't need a lock for reading values. Let me check OS slides.
 	val := kc.kademlia.Table[req.Key]
+	//kc.kademlia.TableMutexLock.Unlock()
 	res.Nodes = kc.kademlia.FindCloseContacts(req.Sender.NodeID, kc.kademlia.NodeID)
 
 	if val == nil || len(val) == 0 {
@@ -134,7 +140,7 @@ func (kc *KademliaCore) FindValue(req FindValueRequest, res *FindValueResult) er
 		res.Err = err
 		return err
 	}
-	
+
 	res.Value = val
 	res.Err = nil
 
