@@ -17,7 +17,7 @@ func (kb *KBucket) Initialize() {
 	fmt.Println("Initialize")
 	kb.NodeID = NewRandomID()
 	// create slice for ContactList
-	kb.ContactList = make([]Contact, k)
+	//kb.ContactList = make([]Contact, k)
 }
 
 // Remove the contact corresponding to a given ID from the KBucket
@@ -60,6 +60,11 @@ func (kb *KBucket) ContainsContact(cont Contact) (exists bool, index int) {
 
 // Update the KBucket to sort the nodes with most recently used in at the head of the KBucket
 func (kb *KBucket) Update(updated Contact) {
+	fmt.Println("Update")
+	fmt.Println(len(kb.ContactList))
+	fmt.Print("K is : ")
+	fmt.Println(string(k))
+
 	// check whether the updated contact exists in the KBucket
 	exists, _ := kb.ContainsContact(updated)
 	if exists {
