@@ -74,7 +74,6 @@ func (k *Kademlia) FindKBucket(nodeId ID) KBucket {
 	fmt.Println("FindKBucket")
 	prefixLen := k.NodeID.Xor(nodeId).PrefixLen()
 	var index int
-
 	if prefixLen == 160 {
 		index = 0
 	} else {
@@ -267,7 +266,8 @@ func (k *Kademlia) UpdateContacts(contact Contact) {
 	currentBucket.Update(contact)
 }
 
-// jwhang: FindCloseNodes: to be used in FindNode
+// nsg622: finds closest nodes
+// assumes closest nodes are in the immediate kbucket and the next one
 func (k *Kademlia) FindCloseContacts(key ID, req ID) []Contact {
 	prefixLen := k.NodeID.Xor(key).PrefixLen()
 	var index int
@@ -292,38 +292,28 @@ func (k *Kademlia) FindCloseContacts(key ID, req ID) []Contact {
 	}
 
 	return contacts
-	/*
-		prefixLen := k.NodeID.Xor(key).PrefixLen()
-		contacts := make([]Contact, 0, 160)
-
-		if bucket_count > prefixLen {
-			k.AddBucketToSlice(req, prefixLen, &contacts)
-		} else {
-		}
-		return contacts
-	*/
 }
 
-func (k *Kademlia) AddBucketToSlice(requester ID, bucketNum int, source *[]Contact) {
-	//k.contacts_mutex[bucketNum].Lock() // jwhang: TODO add mutex for multithread
-	k.AddBucketContentsToSlice(k.BucketList[bucketNum], requester, source)
-	//k.contacts_mutex[bucketNum].Unlock()
-}
+// func (k *Kademlia) AddBucketToSlice(requester ID, bucketNum int, source *[]Contact) {
+// 	//k.contacts_mutex[bucketNum].Lock() // jwhang: TODO add mutex for multithread
+// 	k.AddBucketContentsToSlice(k.BucketList[bucketNum], requester, source)
+// 	//k.contacts_mutex[bucketNum].Unlock()
+// }
 
-func (k *Kademlia) AddBucketContentsToSlice(blist KBucket, requester ID, source *[]Contact) {
-	// count := 0
-	// i := 0
-	// emptySpace := cap(*source) - len(*source)
-	// for count < emptySpace {
-	// 	b := blist.ContactList[i]
-	// 	if b == nil {
-	// 		break
-	// 	}
-	// 	if b.Value.(Contact).NodeID.Equals(requester) {
-	// 		*source = append(*source, b.Value.(Contact))
-	// 		count += 1
-	// 	}
-	// 	i += 1
-	// }
-	// return
-}
+// func (k *Kademlia) AddBucketContentsToSlice(blist KBucket, requester ID, source *[]Contact) {
+// 	// count := 0
+// 	// i := 0
+// 	// emptySpace := cap(*source) - len(*source)
+// 	// for count < emptySpace {
+// 	// 	b := blist.ContactList[i]
+// 	// 	if b == nil {
+// 	// 		break
+// 	// 	}
+// 	// 	if b.Value.(Contact).NodeID.Equals(requester) {
+// 	// 		*source = append(*source, b.Value.(Contact))
+// 	// 		count += 1
+// 	// 	}
+// 	// 	i += 1
+// 	// }
+// 	// return
+// }
