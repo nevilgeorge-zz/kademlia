@@ -295,6 +295,7 @@ func (k *Kademlia) UpdateContacts(contact Contact) {
 func (k *Kademlia) FindCloseContacts(key ID, req ID) []Contact {
 	fmt.Println("FindCloseContacts")
 	prefixLen := k.NodeID.Xor(key).PrefixLen()
+	fmt.Println("prefixLen is: " + strconv.Itoa(prefixLen))
 	var index int
 	if prefixLen == 160 {
 		index = 0
@@ -302,6 +303,7 @@ func (k *Kademlia) FindCloseContacts(key ID, req ID) []Contact {
 		index = 159 - prefixLen
 	}
 	contacts := make([]Contact, 20)
+	fmt.Println("Index is: " + strconv.Itoa(index))
 
 	for _, val := range k.BucketList[index].ContactList {
 		contacts = append(contacts, val)
