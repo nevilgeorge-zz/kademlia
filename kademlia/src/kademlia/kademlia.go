@@ -213,7 +213,7 @@ func (k *Kademlia) DoFindValue(contact *Contact, searchKey ID) string {
 	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
 	fmt.Println("DoFindValue")
-	address := string(contact.Host) + ":" + strconv.Itoa(int(contact.Port))
+	address := contact.Host.String() + ":" + strconv.Itoa(int(contact.Port))
 	client, err := rpc.DialHTTP("tcp", address)
 	if err != nil {
 		log.Fatal("ERR: ", err)
