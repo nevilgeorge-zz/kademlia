@@ -132,18 +132,18 @@ func executeLine(k *kademlia.Kademlia, line string) (response string) {
 				response = "ERR: Not a valid Node ID or host:port address"
 				return
 			}
-            ipAddrStrings, err := net.LookupHost(hostname)
+			ipAddrStrings, err := net.LookupHost(hostname)
 			if err != nil {
 				response = "ERR: Could not find the provided hostname"
 				return
 			}
-            var host net.IP
-            for i := 0; i < len(ipAddrStrings); i++ {
-                host = net.ParseIP(ipAddrStrings[i])
-                if host.To4() != nil {
-                    break
-                }
-            }
+			var host net.IP
+			for i := 0; i < len(ipAddrStrings); i++ {
+				host = net.ParseIP(ipAddrStrings[i])
+				if host.To4() != nil {
+					break
+				}
+			}
 			response = k.DoPing(host, uint16(port))
 			return
 		}
@@ -278,8 +278,8 @@ func executeLine(k *kademlia.Kademlia, line string) (response string) {
 			return
 		}
 		response = k.DoIterativeFindValue(key)
-    default:
-        response = "ERR: Unknown command"
+	default:
+		response = "ERR: Unknown command"
 	}
 	return
 }
