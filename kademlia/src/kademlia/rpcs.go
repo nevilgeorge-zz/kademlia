@@ -5,7 +5,7 @@ package kademlia
 // other groups' code.
 
 import (
-	"fmt"
+	// "fmt"
 	"net"
 )
 
@@ -68,7 +68,6 @@ func (kc *KademliaCore) Store(req StoreRequest, res *StoreResult) error {
 	kc.kademlia.Table[CopyID(req.Key)] = valueCopy
 	res.MsgID = CopyID(req.MsgID)
 	res.Err = nil
-	fmt.Print("LOL")
 
 	// update contact in kbucket
 	kc.kademlia.UpdateContactInKBucket(&req.Sender)
