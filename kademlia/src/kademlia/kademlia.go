@@ -69,8 +69,13 @@ func NewKademlia(laddr string) *Kademlia {
 
 func (k *Kademlia) FindKBucket(nodeId ID) KBucket {
 	fmt.Println("FindKBucket")
-	distance := k.NodeID.Xor(nodeId)
-	index := distance.PrefixLen()
+	prefixLen := k.NodeID.Xor(nodeId).PrefixLen()
+	var index int
+	if prefixLen == 160 {
+		index = 0
+	} else {
+		index = 159 - prefixLen
+	}
 	return k.BucketList[index]
 }
 
@@ -255,7 +260,8 @@ func (k *Kademlia) UpdateContacts(contact Contact) {
 	currentBucket.Update(contact)
 }
 
-// jwhang: FindCloseNodes: to be used in FindNode
+// nsg622: finds closest nodes
+// assumes closest nodes are in the immediate kbucket and the next one
 func (k *Kademlia) FindCloseContacts(key ID, req ID) []Contact {
 	prefixLen := k.NodeID.Xor(key).PrefixLen()
 	var index int
