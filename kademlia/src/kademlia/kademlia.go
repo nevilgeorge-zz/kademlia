@@ -287,8 +287,16 @@ func (k *Kademlia) UpdateContactInKBucket(update *Contact) {
 	bucket, index := k.FindKBucket(update.NodeID)
 	fmt.Println("CALLING UPDATE NOW")
 	k.BucketMutexLock[index].Lock()
-	bucket.Update(*update)
+	err := bucket.Update(*update)
 	k.BucketMutexLock[index].Unlock()
+	if err != nil {
+		first := k.BucketList[index].ContactList[0]
+		status := k.DoPing(first.Host, first.Port)
+		if status[0:2] != "OK" {
+			k.BucketList[err.index].RemoveContact(first.NodeID)
+			k.BucketList[err.index].AddContact(&(k.BucketList[err.index].ContactList), err.updated)
+		}
+	}
 }
 
 // jwhang: updates each contact
