@@ -325,8 +325,6 @@ func (k *Kademlia) FindCloseContacts(key ID, req ID) []Contact {
 	} else {
 		index = 159 - prefixLen
 	}
-	fmt.Println("LOL")
-
 	contacts := make([]Contact, 0, 20)
 	for _, val := range k.BucketList[index].ContactList {
 		contacts = append(contacts, val)
