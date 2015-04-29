@@ -31,8 +31,6 @@ type Kademlia struct {
 }
 
 func NewKademlia(laddr string) *Kademlia {
-	// TODO: Initialize other state here as you add functionality.
-	fmt.Println("NewKademlia")
 	k := new(Kademlia)
 	k.NodeID = NewRandomID()
 	// only 160 nodes in this system
@@ -74,16 +72,12 @@ func NewKademlia(laddr string) *Kademlia {
 }
 
 func (k *Kademlia) FindKBucket(nodeId ID) (bucket *KBucket, index int) {
-	fmt.Println("FindKBucket")
 	prefixLen := k.NodeID.Xor(nodeId).PrefixLen()
 	if prefixLen == 160 {
 		index = 0
 	} else {
 		index = 159 - prefixLen
 	}
-	/*
-		index = distance.PrefixLen()
-	*/
 	k.BucketMutexLock[index].Lock()
 	bucket = &(k.BucketList[index])
 	k.BucketMutexLock[index].Unlock()
@@ -101,13 +95,10 @@ func (e *NotFoundError) Error() string {
 }
 
 func (k *Kademlia) FindContact(nodeId ID) (*Contact, error) {
-	// TODO: Search through contacts, find specified ID
 	// Find contact with provided ID
-	fmt.Println("FindContact")
 	if nodeId == k.NodeID {
 		return &k.SelfContact, nil
 	}
-	fmt.Println(len(k.BucketList))
 	for i := 0; i < len(k.BucketList); i++ {
 		kb := k.BucketList[i]
 		for j := 0; j < len(kb.ContactList); j++ {
@@ -124,11 +115,8 @@ func (k *Kademlia) FindContact(nodeId ID) (*Contact, error) {
 
 // This is the function to perform the RPC
 func (k *Kademlia) DoPing(host net.IP, port uint16) string {
-	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
-	fmt.Println("DoPing")
 	address := host.String() + ":" + strconv.Itoa(int(port))
-	fmt.Println(address)
 	client, err := rpc.DialHTTP("tcp", address)
 	if err != nil {
 		log.Fatal("ERR: ", err)
@@ -154,9 +142,7 @@ func (k *Kademlia) DoPing(host net.IP, port uint16) string {
 }
 
 func (k *Kademlia) DoStore(contact *Contact, key ID, value []byte) string {
-	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
-	fmt.Println("DoStore")
 	address := string(contact.Host.String()) + ":" + strconv.Itoa(int(contact.Port))
 	client, err := rpc.DialHTTP("tcp", address)
 	if err != nil {
@@ -182,9 +168,7 @@ func (k *Kademlia) DoStore(contact *Contact, key ID, value []byte) string {
 }
 
 func (k *Kademlia) DoFindNode(contact *Contact, searchKey ID) string {
-	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
-	fmt.Println("FindNode")
 	address := contact.Host.String() + ":" + strconv.Itoa(int(contact.Port))
 	client, err := rpc.DialHTTP("tcp", address)
 	if err != nil {
@@ -229,9 +213,7 @@ func (k *Kademlia) DoFindNode(contact *Contact, searchKey ID) string {
 }
 
 func (k *Kademlia) DoFindValue(contact *Contact, searchKey ID) string {
-	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
-	fmt.Println("DoFindValue")
 	address := contact.Host.String() + ":" + strconv.Itoa(int(contact.Port))
 	client, err := rpc.DialHTTP("tcp", address)
 	if err != nil {
@@ -259,9 +241,7 @@ func (k *Kademlia) DoFindValue(contact *Contact, searchKey ID) string {
 }
 
 func (k *Kademlia) LocalFindValue(searchKey ID) string {
-	// TODO: Implement
 	// If all goes well, return "OK: <output>", otherwise print "ERR: <messsage>"
-	fmt.Println("LocalFindValue")
 	val := k.Table[searchKey]
 	if val == nil || len(val) == 0 {
 		return "ERR: Value not found in local table"
@@ -285,7 +265,6 @@ func (k *Kademlia) DoIterativeFindValue(key ID) string {
 
 func (k *Kademlia) UpdateContactInKBucket(update *Contact) {
 	bucket, index := k.FindKBucket(update.NodeID)
-	fmt.Println("CALLING UPDATE NOW")
 	k.BucketMutexLock[index].Lock()
 	err := bucket.Update(*update)
 	k.BucketMutexLock[index].Unlock()
@@ -301,7 +280,6 @@ func (k *Kademlia) UpdateContactInKBucket(update *Contact) {
 
 // jwhang: updates each contact
 func (k *Kademlia) UpdateContacts(contact Contact) {
-	fmt.Println("UpdateContacts")
 	prefixLen := k.NodeID.Xor(contact.NodeID).PrefixLen()
 	if prefixLen == 160 {
 		prefixLen = 0
@@ -317,7 +295,6 @@ func (k *Kademlia) UpdateContacts(contact Contact) {
 // nsg622: finds closest nodes
 // assumes closest nodes are in the immediate kbucket and the next one
 func (k *Kademlia) FindCloseContacts(key ID, req ID) []Contact {
-	fmt.Println("FindCloseContacts")
 	prefixLen := k.NodeID.Xor(key).PrefixLen()
 	var index int
 	if prefixLen == 160 {
@@ -344,27 +321,3 @@ func (k *Kademlia) FindCloseContacts(key ID, req ID) []Contact {
 
 	return contacts
 }
-
-// func (k *Kademlia) AddBucketToSlice(requester ID, bucketNum int, source *[]Contact) {
-// 	//k.contacts_mutex[bucketNum].Lock() // jwhang: TODO add mutex for multithread
-// 	k.AddBucketContentsToSlice(k.BucketList[bucketNum], requester, source)
-// 	//k.contacts_mutex[bucketNum].Unlock()
-// }
-
-// func (k *Kademlia) AddBucketContentsToSlice(blist KBucket, requester ID, source *[]Contact) {
-// 	// count := 0
-// 	// i := 0
-// 	// emptySpace := cap(*source) - len(*source)
-// 	// for count < emptySpace {
-// 	// 	b := blist.ContactList[i]
-// 	// 	if b == nil {
-// 	// 		break
-// 	// 	}
-// 	// 	if b.Value.(Contact).NodeID.Equals(requester) {
-// 	// 		*source = append(*source, b.Value.(Contact))
-// 	// 		count += 1
-// 	// 	}
-// 	// 	i += 1
-// 	// }
-// 	// return
-// }

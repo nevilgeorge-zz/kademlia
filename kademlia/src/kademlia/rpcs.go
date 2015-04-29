@@ -5,7 +5,6 @@ package kademlia
 // other groups' code.
 
 import (
-	// "fmt"
 	"net"
 )
 
@@ -95,7 +94,6 @@ type FindNodeResult struct {
 }
 
 func (kc *KademliaCore) FindNode(req FindNodeRequest, res *FindNodeResult) error {
-	// TODO: Implement.
 	kc.kademlia.UpdateContacts(req.Sender)
 	res.MsgID = CopyID(req.MsgID)
 	res.Nodes = kc.kademlia.FindCloseContacts(req.NodeID, kc.kademlia.NodeID)
@@ -126,11 +124,10 @@ type FindValueResult struct {
 }
 
 func (kc *KademliaCore) FindValue(req FindValueRequest, res *FindValueResult) error {
-	// TODO: Implement.
 	res.MsgID = CopyID(req.MsgID)
-	//kc.kademlia.TableMutexLock.Lock() // jwhang: Pretty sure you don't need a lock for reading values. Let me check OS slides.
+	kc.kademlia.TableMutexLock.Lock() // jwhang: Pretty sure you don't need a lock for reading values. Let me check OS slides.
 	val := kc.kademlia.Table[req.Key]
-	//kc.kademlia.TableMutexLock.Unlock()
+	kc.kademlia.TableMutexLock.Unlock()
 	res.Nodes = kc.kademlia.FindCloseContacts(req.Sender.NodeID, kc.kademlia.NodeID)
 
 	if val == nil || len(val) == 0 {
