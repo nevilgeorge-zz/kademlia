@@ -211,18 +211,18 @@ func (k *Kademlia) DoFindNode(contact *Contact, searchKey ID) string {
 	// jwhang: taken directly from print_contact in main.go
 	// probably a bad idea. need to abstract it out
 	response := "OK:\n"
+	count := 0
 	found := false
 	for i := 0; i < len(result.Nodes); i++ {
 		c := result.Nodes[i]
 		if c.Host != nil {
 			found = true
-			response += "	Host = " + c.Host.String()
-			response += "	Port = " + strconv.Itoa(int(c.Port)) + "\n"
+			count += 1
 		}
 	}
 
 	if found {
-		return response
+		return response + " Found " + strconv.Itoa(count) + " Contacts"
 	} else {
 		return "ERR: NOT FOUND"
 	}
@@ -255,7 +255,7 @@ func (k *Kademlia) DoFindValue(contact *Contact, searchKey ID) string {
 	}
 
 	k.UpdateContactInKBucket(contact)
-	return "OK: Contact updated in KBucket"
+	return "OK: " + string(result.Value)
 }
 
 func (k *Kademlia) LocalFindValue(searchKey ID) string {
@@ -310,14 +310,13 @@ func (k *Kademlia) UpdateContacts(contact Contact) {
 // assumes closest nodes are in the immediate kbucket and the next one
 func (k *Kademlia) FindCloseContacts(key ID, req ID) []Contact {
 	fmt.Println("FindCloseContacts")
-	distance := k.NodeID.Xor(key)
-	index := distance.PrefixLen()
-	// var index int
-	// if prefixLen == 160 {
-	// 	index = 0
-	// } else {
-	// 	index = 159 - prefixLen
-	// }
+	prefixLen := k.NodeID.Xor(key).PrefixLen()
+	var index int
+	if prefixLen == 160 {
+		index = 0
+	} else {
+		index = 159 - prefixLen
+	}
 
 	contacts := make([]Contact, 0, 20)
 	for _, val := range k.BucketList[index].ContactList {
