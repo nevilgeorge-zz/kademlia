@@ -6,43 +6,57 @@ import (
 
 // KBucket struct
 type KBucket struct {
-	NodeID      ID
 	ContactList []Contact
+	ContactChan	chan *Contact
+	IDChan		chan ID
 	Kad         *Kademlia
-	Kcore       KademliaCore
 }
 
 // Initialize KBuckets, called 160 times when Kademlia is instantiated in kademlia.go
 func (kb *KBucket) Initialize() {
-	kb.NodeID = NewRandomID()
 	// create slice for ContactList
 	kb.ContactList = make([]Contact, 0, k)
+	kb.ContactChan = make(chan *Contact)
+	kb.IDChan = make(chan ID)
+
+	go kb.handleContacts()
+}
+
+// go routine function to handle interacting with the ContactList
+func (kb *KBucket) handleContacts() {
+	for {
+		select {
+		case newContact := <- kb.ContactChan:
+			kb.ContactList = append(kb.ContactList, *newContact)
+			fmt.Println("# of contacts in node: ", len(kb.ContactList))
+
+		case targetID := <- kb.IDChan:
+			for i, _ := range kb.ContactList {
+				if kb.ContactList[i].NodeID == targetID {
+					temp := kb.ContactList
+					a := append(temp[:i], temp[(i+1):]...)
+					kb.ContactList = a
+				}
+			}
+			
+		}
+	}
 }
 
 // Remove the contact corresponding to a given ID from the KBucket
-func (kb *KBucket) RemoveContact(targetID ID) bool {
+func (kb *KBucket) RemoveContact(targetID ID) {
 	fmt.Println("RemoveContact")
-	for i, _ := range kb.ContactList {
-		if kb.ContactList[i].NodeID == targetID {
-			temp := kb.ContactList
-			a := append(temp[:i], temp[(i+1):]...)
-			kb.ContactList = a
-			return true
-		}
-	}
-	return false
+	kb.IDChan <- targetID
 }
 
 // Adds a given contact to the end of the kbucket
-func (kb *KBucket) AddContact(contactList *[]Contact, newContact Contact) {
+func (kb *KBucket) AddContact(newContact Contact) {
 	fmt.Println("AddContact")
 	toAdd := new(Contact)
 	toAdd.NodeID = newContact.NodeID
 	toAdd.Host = newContact.Host
 	toAdd.Port = newContact.Port
-	*contactList = append(*contactList, *toAdd)
-	fmt.Println("Now I have ...")
-	fmt.Println(len(kb.ContactList))
+	kb.ContactChan <- toAdd
 }
 
 // returns a boolean for whether a given Contact exists in the KBucket and index if it was found
@@ -91,7 +105,7 @@ func (kb *KBucket) Update(updated Contact) {
 		fmt.Println(temp.Host)
 		fmt.Println("Port:")
 		fmt.Println(temp.Port)
-		kb.AddContact(&kb.ContactList, *temp) // jwhang: kinda fishy.. not sure if this is ok
+		kb.AddContact(*temp) // jwhang: kinda fishy.. not sure if this is ok
 	} else {
 		// ping first node in slice
 		// if it doesn't respond, removeContact(oldContact) and addContact(updated)
@@ -100,7 +114,7 @@ func (kb *KBucket) Update(updated Contact) {
 		ret := kb.Kad.DoPing(firstContact.Host, firstContact.Port)
 		if ret == "Error" { // jwhang TODO: Fix this to nil
 			kb.RemoveContact(firstContact.NodeID)
-			kb.AddContact(&kb.ContactList, updated)
+			kb.AddContact(updated)
 		} else {
 			kb.MoveToTail(firstContact)
 		}
@@ -115,5 +129,5 @@ func (kb *KBucket) MoveToTail(updated Contact) {
 		kb.RemoveContact(updated.NodeID)
 	}
 	// adds to the end of the KBucket
-	kb.AddContact(&kb.ContactList, updated)
+	kb.AddContact(updated)
 }

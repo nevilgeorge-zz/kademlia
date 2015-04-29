@@ -34,9 +34,11 @@ func NewKademlia(laddr string) *Kademlia {
 	k.NodeID = NewRandomID()
 	// only 160 nodes in this system
 	k.BucketList = make([]KBucket, bucket_count)
+	// k.BucketChannel = make(chan KBucket)
 
 	// initialize the data entry table
 	k.Table = make(map[ID][]byte)
+
 
 	// initialize all k-buckets
 	for i := 0; i < b; i++ {
@@ -72,14 +74,13 @@ func NewKademlia(laddr string) *Kademlia {
 
 func (k *Kademlia) FindKBucket(nodeId ID) *KBucket {
 	fmt.Println("FindKBucket")
-	distance := k.NodeID.Xor(nodeId)
-	// var index int
-	// if prefixLen == 160 {
-	// 	index = 0
-	// } else {
-	// 	index = 159 - prefixLen
-	// }
-	index := distance.PrefixLen()
+	prefixLen := k.NodeID.Xor(nodeId).PrefixLen()
+	var index int
+	if prefixLen == 160 {
+		index = 0
+	} else {
+		index = 159 - prefixLen
+	}
 	return &(k.BucketList[index])
 }
 
@@ -297,14 +298,15 @@ func (k *Kademlia) UpdateContacts(contact Contact) {
 // assumes closest nodes are in the immediate kbucket and the next one
 func (k *Kademlia) FindCloseContacts(key ID, req ID) []Contact {
 	fmt.Println("FindCloseContacts")
-	distance := k.NodeID.Xor(key)
-	index := distance.PrefixLen()
-	// var index int
-	// if prefixLen == 160 {
-	// 	index = 0
-	// } else {
-	// 	index = 159 - prefixLen
-	// }
+	prefixLen := k.NodeID.Xor(key).PrefixLen()
+	var index int
+	if prefixLen == 160 {
+		index = 0
+	} else {
+		index = 159 - prefixLen
+	}
+	fmt.Println("Index is: ", index)
+	fmt.Println("# of kbuckets ", len(k.BucketList))
 
 	contacts := make([]Contact, 0, 20)
 	for _, val := range k.BucketList[index].ContactList {
@@ -312,13 +314,17 @@ func (k *Kademlia) FindCloseContacts(key ID, req ID) []Contact {
 	}
 
 	if len(contacts) != 20 {
-		for _, val := range k.BucketList[index+1].ContactList {
+		for _, val := range k.BucketList[(index + 1) % 160].ContactList {
 			contacts = append(contacts, val)
 			if len(contacts) == 20 {
 				break
 			}
 		}
 	}
+
+	// for len(contacts) != 20 && index > 0 && index < 160 {
+		
+	// }
 
 	return contacts
 }
