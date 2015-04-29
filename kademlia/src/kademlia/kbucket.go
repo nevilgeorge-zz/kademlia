@@ -12,6 +12,13 @@ type KBucket struct {
 	ContactMutexLock sync.Mutex
 }
 
+// KBucket error
+type KBucketFullError struct {
+	updated Contact
+	index int
+	msg string
+}
+
 // Initialize KBuckets, called 160 times when Kademlia is instantiated in kademlia.go
 func (kb *KBucket) Initialize() {
 	kb.NodeID = NewRandomID()
@@ -54,25 +61,24 @@ func (kb *KBucket) ContainsContact(cont Contact) (exists bool, index int) {
 		if current.NodeID.Equals(cont.NodeID) {
 			exists = true
 			index = i
-			return exists, i
+			return
 		}
 	}
-	if !exists {
-		exists = false
-		index = -1
-	}
-	return exists, index
+
+	exists = false
+	index = -1
+	return
 }
 
 // Update the KBucket to sort the nodes with most recently used in at the head of the KBucket
-func (kb *KBucket) Update(updated Contact) {
+func (kb *KBucket) Update(updated Contact) (err *KBucketFullError) {
 	fmt.Println("Update")
 	fmt.Println(len(kb.ContactList))
 	fmt.Print("K is : ")
 	fmt.Print(k)
 
 	// check whether the updated contact exists in the KBucket
-	exists, _ := kb.ContainsContact(updated)
+	exists, index := kb.ContainsContact(updated)
 	if exists {
 		fmt.Println("It exists!")
 		// move Contact to the end of the KBucket
@@ -100,6 +106,12 @@ func (kb *KBucket) Update(updated Contact) {
 		// ping first node in slice
 		// if it doesn't respond, removeContact(oldContact) and addContact(updated)
 		// else moveToTail(oldContact) and ignore updated
+		err := new(KBucketFullError)
+		err.msg = "KBucket is full, ping the first contact and check if it exists."
+		err.updated = updated
+		err.index = index
+		return err
+
 		//firstContact := kb.ContactList[0]
 		/*
 			ret := kb.Kad.DoPing(firstContact.Host, firstContact.Port)
@@ -116,6 +128,7 @@ func (kb *KBucket) Update(updated Contact) {
 			}
 		*/
 	}
+	return nil
 }
 
 // moves a contact from its position in the KBucket to the end of the same KBucket
