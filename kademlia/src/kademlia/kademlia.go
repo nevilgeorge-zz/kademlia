@@ -22,11 +22,12 @@ const (
 
 // Kademlia type. You can put whatever state you need in this.
 type Kademlia struct {
-	NodeID         ID
-	SelfContact    Contact
-	BucketList     []KBucket
-	Table          map[ID][]byte
-	TableMutexLock sync.Mutex
+	NodeID          ID
+	SelfContact     Contact
+	BucketList      []KBucket
+	Table           map[ID][]byte
+	TableMutexLock  sync.Mutex
+	BucketMutexLock [bucket_count]sync.Mutex
 }
 
 func NewKademlia(laddr string) *Kademlia {
@@ -72,17 +73,22 @@ func NewKademlia(laddr string) *Kademlia {
 	return k
 }
 
-func (k *Kademlia) FindKBucket(nodeId ID) *KBucket {
+func (k *Kademlia) FindKBucket(nodeId ID) (bucket *KBucket, index int) {
 	fmt.Println("FindKBucket")
-	distance := k.NodeID.Xor(nodeId)
-	// var index int
-	// if prefixLen == 160 {
-	// 	index = 0
-	// } else {
-	// 	index = 159 - prefixLen
-	// }
-	index := distance.PrefixLen()
-	return &(k.BucketList[index])
+	prefixLen := k.NodeID.Xor(nodeId).PrefixLen()
+	if prefixLen == 160 {
+		index = 0
+	} else {
+		index = 159 - prefixLen
+	}
+	/*
+		index = distance.PrefixLen()
+	*/
+	k.BucketMutexLock[index].Lock()
+	bucket = &(k.BucketList[index])
+	k.BucketMutexLock[index].Unlock()
+
+	return bucket, index
 }
 
 type NotFoundError struct {
@@ -278,9 +284,11 @@ func (k *Kademlia) DoIterativeFindValue(key ID) string {
 }
 
 func (k *Kademlia) UpdateContactInKBucket(update *Contact) {
-	bucket := k.FindKBucket(update.NodeID)
+	bucket, index := k.FindKBucket(update.NodeID)
 	fmt.Println("CALLING UPDATE NOW")
+	k.BucketMutexLock[index].Lock()
 	bucket.Update(*update)
+	k.BucketMutexLock[index].Unlock()
 }
 
 // jwhang: updates each contact
@@ -291,8 +299,11 @@ func (k *Kademlia) UpdateContacts(contact Contact) {
 		prefixLen = 0
 	}
 
+	k.BucketMutexLock[prefixLen].Lock()
 	currentBucket := k.BucketList[prefixLen]
 	currentBucket.Update(contact)
+	k.BucketMutexLock[prefixLen].Unlock()
+
 }
 
 // nsg622: finds closest nodes

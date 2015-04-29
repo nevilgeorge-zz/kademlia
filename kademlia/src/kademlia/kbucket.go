@@ -2,14 +2,14 @@ package kademlia
 
 import (
 	"fmt"
+	"sync"
 )
 
 // KBucket struct
 type KBucket struct {
-	NodeID      ID
-	ContactList []Contact
-	Kad         *Kademlia
-	Kcore       KademliaCore
+	NodeID           ID
+	ContactList      []Contact
+	ContactMutexLock sync.Mutex
 }
 
 // Initialize KBuckets, called 160 times when Kademlia is instantiated in kademlia.go
@@ -34,6 +34,7 @@ func (kb *KBucket) RemoveContact(targetID ID) bool {
 }
 
 // Adds a given contact to the end of the kbucket
+// Assumes that it is already thread safe
 func (kb *KBucket) AddContact(contactList *[]Contact, newContact Contact) {
 	fmt.Println("AddContact")
 	toAdd := new(Contact)
@@ -91,19 +92,29 @@ func (kb *KBucket) Update(updated Contact) {
 		fmt.Println(temp.Host)
 		fmt.Println("Port:")
 		fmt.Println(temp.Port)
+
+		kb.ContactMutexLock.Lock()
 		kb.AddContact(&kb.ContactList, *temp) // jwhang: kinda fishy.. not sure if this is ok
+		kb.ContactMutexLock.Unlock()
 	} else {
 		// ping first node in slice
 		// if it doesn't respond, removeContact(oldContact) and addContact(updated)
 		// else moveToTail(oldContact) and ignore updated
-		firstContact := kb.ContactList[0]
-		ret := kb.Kad.DoPing(firstContact.Host, firstContact.Port)
-		if ret == "Error" { // jwhang TODO: Fix this to nil
-			kb.RemoveContact(firstContact.NodeID)
-			kb.AddContact(&kb.ContactList, updated)
-		} else {
-			kb.MoveToTail(firstContact)
-		}
+		//firstContact := kb.ContactList[0]
+		/*
+			ret := kb.Kad.DoPing(firstContact.Host, firstContact.Port)
+			if ret == "Error" { // jwhang TODO: Fix this to nil
+				kb.ContactMutexLock.Lock()
+				kb.RemoveContact(firstContact.NodeID)
+				kb.ContactMutexlock.Unlock()
+
+				kb.ContactMutexLock.Lock()
+				kb.AddContact(&kb.ContactList, updated)
+				kb.ContactMutexLock.Unlock()
+			} else {
+				kb.MoveToTail(firstContact)
+			}
+		*/
 	}
 }
 
@@ -112,8 +123,12 @@ func (kb *KBucket) MoveToTail(updated Contact) {
 	exists, _ := kb.ContainsContact(updated)
 	if exists {
 		// finds and removes contact if already exists
+		kb.ContactMutexLock.Lock()
 		kb.RemoveContact(updated.NodeID)
+		kb.ContactMutexLock.Unlock()
 	}
 	// adds to the end of the KBucket
+	kb.ContactMutexLock.Lock()
 	kb.AddContact(&kb.ContactList, updated)
+	kb.ContactMutexLock.Unlock()
 }
