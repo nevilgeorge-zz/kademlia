@@ -67,14 +67,12 @@ func (kb *KBucket) ContainsContact(cont Contact) (exists bool, index int) {
 		if current.NodeID.Equals(cont.NodeID) {
 			exists = true
 			index = i
-			return exists, i
+			return
 		}
 	}
-	if !exists {
-		exists = false
-		index = -1
-	}
-	return exists, index
+	exists = false
+	index = -1
+	return
 }
 
 // Update the KBucket to sort the nodes with most recently used in at the head of the KBucket
