@@ -117,7 +117,7 @@ func TestStoreKeyWithFindValue(t *testing.T) {
 	if messageID.Equals(findResult.MsgID) == false {
 		t.Error("TestFindValue Failed: Message ID Doesn't match")
 	}
-	if len(findResult.Nodes) == 0 {
+	if len(findResult.Nodes) == 1 {
 		t.Error("Returned neighbor nodes without any neighbors! Impossible!")
 		t.Fail()
 	}
